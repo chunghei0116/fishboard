@@ -1,0 +1,2 @@
+import { sqliteTable, text, real, index } from 'drizzle-orm/sqlite-core';
+export const catches = sqliteTable('catches', {id:text('id').primaryKey(),owner:text('owner').notNull(),name:text('name').notNull(),date:text('date').notNull(),x:real('x').notNull().default(.5),y:real('y').notNull().default(.45),source:text('source').notNull(),image:text('image').notNull(),created:text('created').notNull()}, t=>[index('idx_catches_owner_created').on(t.owner,t.created)]);
