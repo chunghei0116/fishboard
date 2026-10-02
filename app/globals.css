@@ -148,11 +148,11 @@ body{margin:0;background:#f6f3e9;color:#2e4439;font-family:Arial,"Noto Sans TC",
 
 .board-add{position:absolute;z-index:5;right:30px;top:37%;display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #b9aa84;background:#fff8e5;color:#294c3d;box-shadow:2px 5px 7px #513d3b45;transform:rotate(3deg);text-align:left;transition:transform .18s ease,box-shadow .18s ease}
 .board-add:hover,.board-add:focus-visible{transform:translateY(-5px) rotate(1deg);box-shadow:3px 10px 12px #513d3b55}
-.board-add-icon{width:34px;height:34px;display:grid;place-items:center;background:#294c3d;color:#fff8e5}
+
 .board-add b,.board-add small{display:block;white-space:nowrap}
 .board-add b{font-size:12px}
 .board-add small{margin-top:4px;color:#837253;font-size:10px}
-@media(max-width:700px){.board-add{top:14%;right:8px;width:82px;flex-direction:column;gap:4px;padding:7px 3px;text-align:center}.board-add-icon{width:28px;height:28px}.board-add b{font-size:10px}.board-add small{margin-top:2px;font-size:8px}.welcome-note{left:7%;top:125px;width:170px;padding:22px 10px}}
+@media(max-width:700px){.board-add{top:14%;right:8px;width:82px;flex-direction:column;gap:4px;padding:7px 3px;text-align:center}.board-add b{font-size:10px}.board-add small{margin-top:2px;font-size:8px}.welcome-note{left:7%;top:125px;width:170px;padding:22px 10px}}
 
 /* Keep the empty board quiet until the collector adds their own catches. */
 .welcome-note{top:32%;left:10%;width:220px;padding:20px 16px}
@@ -160,3 +160,21 @@ body{margin:0;background:#f6f3e9;color:#2e4439;font-family:Arial,"Noto Sans TC",
 .welcome-note p{margin:0;font-size:13px;line-height:1.55}
 .text-button{margin-top:11px;font-size:11px}
 @media(max-width:700px){.welcome-note{top:32%;left:7%;width:190px;padding:17px 12px}.welcome-note h2{font-size:18px}.welcome-note p{font-size:12px}.text-button{margin-top:8px;font-size:10px}}
+
+.board-add.board-stamp{top:28%;right:22px;width:128px;min-height:160px;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;gap:0;padding:4px;border:0;background:transparent;box-shadow:none;transform:rotate(2deg)}
+.board-add.board-stamp:hover,.board-add.board-stamp:focus-visible{transform:translateY(-3px) rotate(0);box-shadow:none}
+.board-add.board-stamp:active{transform:translateY(3px) rotate(2deg)}
+.stamp-visual{position:relative;display:block;flex:none;width:74px;height:108px;transform-origin:50% 90%;filter:drop-shadow(2px 5px 3px #513d3b55);transition:transform .18s ease}
+.stamp-knob,.stamp-neck,.stamp-grip,.stamp-collar,.stamp-base{position:absolute;display:block}
+.stamp-knob{top:0;left:18px;width:38px;height:29px;border:1px solid #70451f;border-radius:48% 48% 44% 44%;background:radial-gradient(ellipse at 35% 22%,#edcf9c 0,#c29359 43%,#704520 100%);box-shadow:inset 0 2px 3px #fff1ca80,inset 0 -5px 5px #4c2d176e,1px 2px 2px #53371f70}
+.stamp-neck{top:23px;left:30px;width:14px;height:18px;background:linear-gradient(90deg,#69421f,#dfb374 46%,#70431f);box-shadow:inset 0 0 2px #f5d6a180}
+.stamp-grip{top:34px;left:18px;width:38px;height:49px;border:1px solid #764a24;border-radius:10px 10px 5px 5px;background:linear-gradient(90deg,#68401f 0,#ae7b44 20%,#e3bd83 49%,#9c6834 80%,#60391d 100%);box-shadow:inset 0 2px 3px #f4d39a80,inset 0 -5px 4px #4e2b1860}
+.stamp-collar{top:78px;left:10px;width:54px;height:11px;border:1px solid #70421e;border-radius:3px;background:linear-gradient(#efcd8a,#a66b31 75%,#633c20);box-shadow:0 2px 2px #53371f70}
+.stamp-base{top:86px;left:8px;width:58px;height:20px;display:flex;align-items:center;justify-content:center;border:1px solid #76231c;border-bottom:4px solid #671b17;border-radius:2px 2px 5px 5px;background:linear-gradient(90deg,#8f251e,#d34c38 42%,#97251e);box-shadow:0 3px 3px #51362c60;color:#ffe4bd}
+.stamp-base>span{font:8px serif}
+.stamp-copy{display:block;min-width:116px;padding:6px 8px 5px;border:1px solid #b9a77f;background:#fff6df;color:#294c3d;text-align:center;box-shadow:2px 3px 0 #73553440;transform:rotate(-1deg)}
+.stamp-copy b{font-size:12px}
+.stamp-copy small{margin-top:3px;color:#837253;font-size:9px}
+.board-stamp:hover .stamp-visual,.board-stamp:focus-visible .stamp-visual{transform:translateY(-5px) rotate(-2deg)}
+.board-stamp:active .stamp-visual{transform:translateY(4px) scaleY(.96)}
+@media(max-width:700px){.board-add.board-stamp{top:14%;right:5px;width:78px;min-height:123px;padding:2px}.stamp-visual{transform:scale(.72);transform-origin:50% 0;height:78px;margin-bottom:-30px}.stamp-copy{min-width:0;width:76px;padding:5px 2px}.stamp-copy b{font-size:10px}.stamp-copy small{margin-top:2px;font-size:8px}}
