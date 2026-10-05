@@ -30,6 +30,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -46,3 +47,6 @@ next-env.d.ts
 /work/
 
 *.tsbuildinfo
+
+# Private Cloudflare Worker development secrets
+.dev.vars*

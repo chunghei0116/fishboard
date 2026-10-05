@@ -1,6 +1,7 @@
+import type { CloudinaryEnv } from './cloudinary';
 import { env } from 'cloudflare:workers';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
-export function bindings(){return env as unknown as {DB:D1Database;BUCKET:R2Bucket;OPENAI_API_KEY?:string;OPENAI_IMAGE_MODEL?:string}}
+export function bindings(){return env as unknown as {DB:D1Database;BUCKET?:R2Bucket;OPENAI_API_KEY?:string;OPENAI_IMAGE_MODEL?:string} & CloudinaryEnv}
 export async function identity(){const u=await getChatGPTUser();if(!u)throw new ApiError('請先登入，再開啟收藏室。',401);return u.userId;}
 export class ApiError extends Error{constructor(message:string,public status=400){super(message)}}
 export function failure(e:unknown){if(e instanceof ApiError)return Response.json({error:e.message},{status:e.status});console.error('Fish collection request failed',e instanceof Error?e.name:'unknown');return Response.json({error:'暫時未能讀取或儲存收藏，請稍後再試。'},{status:503});}
