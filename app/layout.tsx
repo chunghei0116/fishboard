@@ -1,26 +1,26 @@
 import type { Metadata } from "next";
 import "./globals.css";
-
+import "./fishlog.css";
+import { FishLogProvider } from "@/components/fishlog/provider";
+import Shell from "@/components/fishlog/shell";
 export const metadata: Metadata = {
-  title: "釣魚日和 · 我的魚類圖鑑",
-  description: "將每一次釣魚回憶，收藏成像素襟章。",
-  other: {
-    "codex-preview": "development",
-  },
-  icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
-  },
+  title: "FISH LOG · My waters, my catches.",
+  description:
+    "留住每一次漁獲。A personal fishing journal, one fish at a time.",
+  icons: { icon: "/favicon.svg" },
 };
-
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="zh-HK">
-      <body className="antialiased">{children}</body>
+      <body>
+        <FishLogProvider>
+          <Shell>{children}</Shell>
+        </FishLogProvider>
+      </body>
     </html>
   );
 }
