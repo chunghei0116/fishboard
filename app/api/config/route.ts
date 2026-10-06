@@ -13,6 +13,7 @@ export async function GET() {
           }
         : null,
       storageReady: cloudinaryConfigured(e),
+      databaseReady: !!(e.FIREBASE_CLIENT_EMAIL && e.FIREBASE_PRIVATE_KEY),
       generationReady:
         cloudinaryConfigured(e) && !!e.AI && e.GENERATION_ENABLED === "true",
     },

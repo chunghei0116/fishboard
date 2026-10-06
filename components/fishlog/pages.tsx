@@ -34,11 +34,7 @@ export function Collection() {
       </div>
       <div className="fl-collection">
         {species.map((fish, index) => (
-          <Link
-            className="fl-species-card"
-            href={`/species/${fish.id}`}
-            key={fish.id}
-          >
+          <div className="fl-species-card" key={fish.id}>
             <span className="fl-species-number">
               {String(index + 1).padStart(2, "0")} / UNLOCKED
             </span>
@@ -47,11 +43,9 @@ export function Collection() {
             <p>{fish.englishName.toUpperCase()}</p>
             <div>
               <span>{fish.totalCaught} CATCHES</span>
-              <span>
-                BEST {fish.bestLength ?? "—"} cm <ArrowUpRight size={13} />
-              </span>
+              <span>BEST {fish.bestLength ?? "—"} cm</span>
             </div>
-          </Link>
+          </div>
         ))}
       </div>
       {!species.length && !loading && (

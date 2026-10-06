@@ -20,9 +20,7 @@ export function firebaseReady(e: FishlogEnv) {
     e.FIREBASE_PROJECT_ID &&
     e.FIREBASE_API_KEY &&
     e.FIREBASE_AUTH_DOMAIN &&
-    e.FIREBASE_APP_ID &&
-    e.FIREBASE_CLIENT_EMAIL &&
-    e.FIREBASE_PRIVATE_KEY
+    e.FIREBASE_APP_ID
   );
 }
 export class FishlogError extends Error {

@@ -36,6 +36,7 @@ type Config = {
     appId: string;
   };
   storageReady: boolean;
+  databaseReady: boolean;
   generationReady: boolean;
 };
 type Context = {

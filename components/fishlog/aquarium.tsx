@@ -12,7 +12,8 @@ export default function Aquarium({
   total: number;
 }) {
   const [paused, setPaused] = useState(false),
-    [hidden, setHidden] = useState(false);
+    [hidden, setHidden] = useState(false),
+    [selected, setSelected] = useState<string | null>(null);
   const reduced = useReducedMotion();
   useEffect(() => {
     const listener = () => setHidden(document.hidden);
@@ -22,7 +23,17 @@ export default function Aquarium({
   const stopped = paused || hidden || reduced;
   return (
     <>
-      <section className="fl-aquarium" aria-label="已釣魚種水族箱">
+      <section
+        className="fl-aquarium"
+        aria-label="已釣魚種水族箱"
+        onPointerDown={(event) => {
+          if (!(event.target as HTMLElement).closest(".fl-fish-link"))
+            setSelected(null);
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") setSelected(null);
+        }}
+      >
         <div className="fl-tank-count">
           {total} CAUGHT <span>/ {species.length} SPECIES</span>
         </div>
@@ -55,6 +66,10 @@ export default function Aquarium({
             fish={fish}
             index={index}
             stopped={!!stopped}
+            selected={selected === fish.id}
+            onSelect={() =>
+              setSelected((current) => (current === fish.id ? null : fish.id))
+            }
           />
         ))}
         {!species.length && (

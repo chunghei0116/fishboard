@@ -3,9 +3,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Settings, House, Grid2X2, MapPin } from "lucide-react";
 import { useFishLog } from "./provider";
+import Landing from "./landing";
 export default function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname(),
-    { error } = useFishLog();
+    { error, user } = useFishLog();
   return (
     <div className="fl-shell">
       <header className="fl-header">
@@ -32,37 +33,45 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             <small>MY WATERS, MY CATCHES.</small>
           </span>
         </Link>
-        <Link
-          href="/settings"
-          className="fl-settings-link"
-          aria-label="Settings"
-          aria-current={path === "/settings" ? "page" : undefined}
-        >
-          <Settings size={19} />
-        </Link>
-      </header>
-      <nav className="fl-bottom-nav" aria-label="主要導覽">
-        {[
-          { href: "/", label: "HOME", Icon: House },
-          { href: "/collection", label: "COLLECTION", Icon: Grid2X2 },
-          { href: "/map", label: "MAP", Icon: MapPin },
-        ].map(({ href, label, Icon }) => (
+        {user && (
           <Link
-            key={href}
-            href={href}
-            aria-current={path === href ? "page" : undefined}
+            href="/settings"
+            className="fl-settings-link"
+            aria-label="Settings"
+            aria-current={path === "/settings" ? "page" : undefined}
           >
-            <Icon size={18} />
-            <span>{label}</span>
+            <Settings size={19} />
           </Link>
-        ))}
-      </nav>
-      {error && (
-        <p className="fl-error" role="alert">
-          {error} <Link href="/settings">登入設定</Link>
-        </p>
+        )}
+      </header>
+      {user ? (
+        <>
+          <nav className="fl-bottom-nav" aria-label="主要導覽">
+            {[
+              { href: "/", label: "HOME", Icon: House },
+              { href: "/collection", label: "COLLECTION", Icon: Grid2X2 },
+              { href: "/map", label: "MAP", Icon: MapPin },
+            ].map(({ href, label, Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                aria-current={path === href ? "page" : undefined}
+              >
+                <Icon size={18} />
+                <span>{label}</span>
+              </Link>
+            ))}
+          </nav>
+          {error && (
+            <p className="fl-error" role="alert">
+              {error} <Link href="/settings">登入設定</Link>
+            </p>
+          )}
+          {children}
+        </>
+      ) : (
+        <Landing />
       )}
-      {children}
     </div>
   );
 }

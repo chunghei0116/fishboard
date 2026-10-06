@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useAnimationFrame, useMotionValue } from "framer-motion";
 import type { SpeciesSummary } from "@/data/types";
@@ -9,10 +8,14 @@ export default function SwimmingFish({
   fish,
   index,
   stopped,
+  selected,
+  onSelect,
 }: {
   fish: SpeciesSummary;
   index: number;
   stopped: boolean;
+  selected: boolean;
+  onSelect: () => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const clock = useRef(0);
@@ -27,8 +30,6 @@ export default function SwimmingFish({
     y = useMotionValue(0);
   const [direction, setDirection] = useState(1);
   const facing = useRef(1);
-  const [touched, setTouched] = useState(false);
-  const touch = useRef(false);
   useEffect(() => {
     const node = host.current,
       tank = node?.parentElement;
@@ -82,20 +83,13 @@ export default function SwimmingFish({
   });
   return (
     <motion.div ref={host} className="fl-swimmer" style={{ x, y }}>
-      <Link
-        href={`/species/${fish.id}`}
-        className={`fl-fish-link${touched ? " is-touched" : ""}`}
-        aria-label={`${fish.chineseName}，${fish.totalCaught} 次釣獲，查看魚種詳情`}
-        onBlur={() => setTouched(false)}
-        onPointerDown={(event) => {
-          touch.current = event.pointerType === "touch";
-        }}
-        onClick={(event) => {
-          if (touch.current && !touched) {
-            event.preventDefault();
-            setTouched(true);
-          }
-        }}
+      <button
+        type="button"
+        className={`fl-fish-link${selected ? " is-selected" : ""}`}
+        aria-label={`${fish.chineseName}，${fish.totalCaught} 次釣獲`}
+        aria-expanded={selected}
+        aria-describedby={selected ? `fish-tooltip-${fish.id}` : undefined}
+        onClick={onSelect}
       >
         <motion.span
           className="fl-swimmer-image"
@@ -104,7 +98,12 @@ export default function SwimmingFish({
         >
           <PixelFish species={fish} />
         </motion.span>
-        <span className="fl-fish-tooltip">
+        <span
+          className="fl-fish-tooltip"
+          id={`fish-tooltip-${fish.id}`}
+          role="tooltip"
+          hidden={!selected}
+        >
           <b>{fish.chineseName}</b>
           <span>{fish.englishName}</span>
           <small>
@@ -112,7 +111,7 @@ export default function SwimmingFish({
             {fish.bestLength ? `${fish.bestLength} cm` : "—"}
           </small>
         </span>
-      </Link>
+      </button>
     </motion.div>
   );
 }
