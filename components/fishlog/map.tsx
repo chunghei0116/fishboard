@@ -84,9 +84,7 @@ export default function CatchMap() {
   return (
     <>
       <div className="fl-page-heading">
-        <span>THE PLACES YOU REMEMBER</span>
-        <h1>MY WATERS</h1>
-        <p>每個釣點，都有自己嘅故事。</p>
+        <h1>MAP</h1>
       </div>
       {error && <p className="fl-error">{error}</p>}
       <div className="fl-map-layout">

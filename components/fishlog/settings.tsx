@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
 import { useFishLog } from "./provider";
 export default function Settings() {
   const { demo, user, config, login, logout, data, resetDemo } = useFishLog();
@@ -32,9 +31,7 @@ export default function Settings() {
   return (
     <div className="fl-settings">
       <div className="fl-page-heading">
-        <span>YOUR JOURNAL, YOUR WAY</span>
         <h1>SETTINGS</h1>
-        <p>登入私人帳戶，或者先用示範紀錄試玩。</p>
       </div>
       {error && (
         <p className="fl-error" role="alert">
@@ -109,9 +106,6 @@ export default function Settings() {
         <p>
           未設定的服務需要由網站擁有人接上。你仍可先瀏覽示範魚種與 Catch Log。
         </p>
-        <Link href="/add" className="fl-back">
-          新增一條釣獲紀錄 →
-        </Link>
       </section>
     </div>
   );

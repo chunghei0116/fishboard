@@ -1,13 +1,9 @@
 "use client";
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { useReducedMotion } from "framer-motion";
 import { Pause, Play, ChevronDown } from "lucide-react";
 import type { SpeciesSummary } from "@/data/types";
-import PixelFish from "./pixel-fish";
-function seed(id: string) {
-  return [...id].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 7);
-}
+import SwimmingFish from "./swimming-fish";
 export default function Aquarium({
   species,
   total,
@@ -53,74 +49,16 @@ export default function Aquarium({
             </span>
           ))}
         </div>
-        {species.map((fish, index) => {
-          const n = seed(fish.id),
-            positions: Record<string, [number, number]> = {
-              "black-seabream": [17, 27],
-              "yellowfin-seabream": [48, 40],
-              "red-scorpionfish": [73, 40],
-              "japanese-seabass": [84, 64],
-              "jack-mackerel": [71, 80],
-              rabbitfish: [49, 73],
-            },
-            [left, top] = positions[fish.id] || [
-              15 + (index % 3) * 30,
-              25 + Math.floor(index / 3) * 27,
-            ];
-          return (
-            <motion.div
-              key={fish.id}
-              className="fl-swimmer"
-              style={
-                {
-                  "--fish-left": `${left}%`,
-                  top: `${Math.min(top, 78)}%`,
-                } as React.CSSProperties
-              }
-              animate={
-                stopped
-                  ? { x: 0, y: 0 }
-                  : { x: ["-12%", "12%", "-12%"], y: [0, (n % 11) - 5, 0] }
-              }
-              transition={{
-                duration: 20 + (n % 41),
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            >
-              <Link
-                href={`/species/${fish.id}`}
-                className="fl-fish-link"
-                aria-label={`${fish.chineseName}，${fish.totalCaught} 次釣獲，查看魚種詳情`}
-              >
-                <motion.span
-                  className="fl-swimmer-image"
-                  animate={{ scaleX: stopped ? 1 : [1, 1, -1, -1, 1] }}
-                  transition={{
-                    duration: 20 + (n % 41),
-                    repeat: Infinity,
-                    times: [0, 0.48, 0.5, 0.98, 1],
-                    ease: "linear",
-                  }}
-                >
-                  <PixelFish species={fish} />
-                </motion.span>
-                <span className="fl-fish-tooltip">
-                  <b>{fish.chineseName}</b>
-                  <span>{fish.englishName}</span>
-                  <small>
-                    {fish.totalCaught} catches · Best{" "}
-                    {fish.bestLength ? `${fish.bestLength} cm` : "—"}
-                  </small>
-                </span>
-              </Link>
-            </motion.div>
-          );
-        })}
+        {species.map((fish, index) => (
+          <SwimmingFish
+            key={fish.id}
+            fish={fish}
+            index={index}
+            stopped={!!stopped}
+          />
+        ))}
         {!species.length && (
-          <p className="fl-tank-empty">
-            第一尾魚，第一個故事。<Link href="/add">新增釣獲紀錄 →</Link>
-          </p>
+          <p className="fl-tank-empty">第一尾魚，第一個故事。</p>
         )}
         <div className="fl-tank-sign">
           DIFFERENT WATERS

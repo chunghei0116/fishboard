@@ -28,11 +28,9 @@ export function Collection() {
   return (
     <>
       <div className="fl-page-heading">
-        <span>THE ONES YOU’VE MET</span>
         <h1>
           COLLECTION<span className="fl-heading-count">{species.length}</span>
         </h1>
-        <p>一個魚種，一段水邊回憶。</p>
       </div>
       <div className="fl-collection">
         {species.map((fish, index) => (
@@ -59,7 +57,6 @@ export function Collection() {
       {!species.length && !loading && (
         <div className="fl-empty">
           第一條 Catch 保存後，魚種就會出現喺呢度。
-          <Link href="/add">新增紀錄 →</Link>
         </div>
       )}
     </>
@@ -82,7 +79,6 @@ export function SpeciesDetail({ id }: { id: string }) {
           <PixelFish species={fish} />
         </div>
         <div>
-          <span className="fl-eyebrow">SPECIES / UNLOCKED</span>
           <h1>{fish.chineseName}</h1>
           <p className="fl-latin">{fish.englishName.toUpperCase()}</p>
           <p className="fl-scientific">{fish.scientificName || "學名未記錄"}</p>
@@ -138,7 +134,6 @@ export function CatchDetail({ id }: { id: string }) {
         <ArrowLeft size={15} /> BACK TO CATCH LOG
       </Link>
       <div className="fl-detail-heading">
-        <span className="fl-eyebrow">A MOMENT BY THE WATER</span>
         <h1>{fish.chineseName}</h1>
         <Link href={`/species/${fish.id}`}>
           {fish.englishName.toUpperCase()} <ArrowUpRight size={14} />
@@ -148,7 +143,6 @@ export function CatchDetail({ id }: { id: string }) {
         <div>
           <div className="fl-detail-pixel">
             <PixelFish species={fish} />
-            <span>THE FISH / PIXEL PORTRAIT</span>
           </div>
           <figure className="fl-original">
             {record.photo ? (

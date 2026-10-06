@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
-import { Clock3, MapPin, ArrowRight } from "lucide-react";
+import { Clock3, MapPin, ArrowRight, Plus } from "lucide-react";
 import type { Catch, Species } from "@/data/types";
 import { filterCatches } from "@/lib/fish-log";
 import PixelFish from "./pixel-fish";
@@ -38,7 +38,7 @@ export function CatchRows({
                   return (
                     <Link
                       href={`/catches/${c.id}`}
-                      className="fl-catch-card"
+                      className="fl-catch-row"
                       key={c.id}
                     >
                       <PixelFish species={fish} />
@@ -85,8 +85,13 @@ export default function CatchLog({
   });
   return (
     <section id="catch-log" className="fl-log">
-      <div className="fl-section-header">
-        <h1>CATCH LOG</h1>
+      <div className="fl-section-header fl-log-header">
+        <div className="fl-log-heading">
+          <h1>CATCH LOG</h1>
+          <Link className="fl-add-catch" href="/add">
+            <Plus size={14} /> ADD CATCH
+          </Link>
+        </div>
         <div className="fl-filters">
           <button
             className={
@@ -152,11 +157,6 @@ export default function CatchLog({
               ? "試下其他魚種、地點或年份。"
               : "新增漁獲，收藏會隨每次釣魚慢慢成長。"}
           </p>
-          {!catches.length && (
-            <Link className="fl-primary" href="/add">
-              新增第一條紀錄
-            </Link>
-          )}
         </div>
       )}
     </section>

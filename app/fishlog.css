@@ -73,53 +73,7 @@ body {
   color: var(--fl-muted);
   margin-top: 9px;
 }
-.fl-header nav {
-  display: flex;
-  gap: 40px;
-  align-items: center;
-}
-.fl-header nav a {
-  font: 11px var(--fl-mono);
-  letter-spacing: 0.13em;
-  padding: 13px 0;
-  position: relative;
-}
-.fl-header nav a[aria-current="page"]:after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--fl-blue);
-}
-.fl-mode {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: -6px 0 16px;
-  font: 9px var(--fl-mono);
-  color: var(--fl-muted);
-  letter-spacing: 0.1em;
-}
-.fl-mode > span {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-.fl-mode > span i {
-  width: 4px;
-  height: 4px;
-  background: var(--fl-muted);
-  border-radius: 50%;
-}
-.fl-mode > a {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  color: var(--fl-text);
-  padding: 6px;
-}
+
 .fl-aquarium {
   height: 450px;
   background: var(--fl-surface);
@@ -158,13 +112,7 @@ body {
   color: var(--fl-muted);
   padding: 5px;
 }
-.fl-swimmer {
-  left: clamp(50px, var(--fish-left), calc(100% - 130px));
-  position: absolute;
-  width: 150px;
-  height: 96px;
-  margin-left: -35px;
-}
+
 .fl-fish-link {
   display: block;
   position: relative;
@@ -332,30 +280,7 @@ body {
   display: grid;
   gap: 10px;
 }
-.fl-catch-card {
-  display: grid;
-  grid-template-columns:
-    110px minmax(160px, 1.3fr) 90px minmax(120px, 1.4fr)
-    72px 18px;
-  align-items: center;
-  gap: 17px;
-  padding: 14px 22px 14px 10px;
-  min-height: 88px;
-  border: 1px solid #e9e8e1;
-  border-radius: 8px;
-  background: var(--fl-surface);
-  transition:
-    border-color 0.2s,
-    transform 0.2s;
-}
-.fl-catch-card:hover {
-  border-color: #b9c9d6;
-  transform: translateX(2px);
-}
-.fl-catch-card > .fl-pixel {
-  width: 105px;
-  height: 62px;
-}
+
 .fl-catch-name b {
   display: block;
   font-size: 18px;
@@ -870,22 +795,11 @@ body {
   .fl-shell {
     padding: 0 25px;
   }
-  .fl-catch-card {
-    grid-template-columns:
-      85px minmax(140px, 1fr) 65px minmax(100px, 1fr)
-      60px 14px;
-    gap: 12px;
-    padding-right: 15px;
-  }
-  .fl-catch-card > .fl-pixel {
-    width: 85px;
-  }
+
   .fl-day {
     grid-template-columns: 85px 1fr;
   }
-  .fl-header nav {
-    gap: 27px;
-  }
+
   .fl-filters {
     gap: 16px;
   }
@@ -914,16 +828,7 @@ body {
   .fl-brand small {
     font-size: 8px;
   }
-  .fl-header nav {
-    width: 100%;
-    justify-content: space-between;
-    gap: 20px;
-  }
-  .fl-mode {
-    font-size: 7px;
-    letter-spacing: 0.04em;
-    margin-top: 4px;
-  }
+
   .fl-aquarium {
     height: 330px;
   }
@@ -932,12 +837,7 @@ body {
     top: 18px;
     font-size: 8px;
   }
-  .fl-swimmer {
-    left: clamp(36px, var(--fish-left), calc(100% - 90px));
-    width: 95px;
-    height: 75px;
-    margin-left: -25px;
-  }
+
   .fl-swimmer .fl-pixel {
     width: 95px;
     height: 75px;
@@ -994,19 +894,7 @@ body {
   .fl-date i {
     display: none;
   }
-  .fl-catch-card {
-    grid-template-columns: 80px 1fr 20px;
-    grid-template-rows: auto auto auto;
-    gap: 10px 16px;
-    padding: 20px;
-    min-height: 160px;
-  }
-  .fl-catch-card > .fl-pixel {
-    grid-column: 1;
-    grid-row: 1/3;
-    width: 80px;
-    height: 68px;
-  }
+
   .fl-catch-name {
     grid-column: 2/4;
     grid-row: 1;
@@ -1218,15 +1106,321 @@ body {
   .fl-shell {
     position: relative;
   }
-  .fl-mode {
-    position: absolute;
-    left: 40px;
-    right: 40px;
-    top: 87px;
-    margin: 0;
-    font-size: 7px;
-  }
+
   .fl-aquarium {
     height: 460px;
+  }
+}
+
+/* Compact journal rows and floating glass navigation. */
+.fl-shell {
+  padding-bottom: 115px;
+}
+.fl-settings-link {
+  padding: 12px;
+  color: var(--fl-muted) !important;
+}
+.fl-settings-link[aria-current="page"] {
+  color: var(--fl-blue) !important;
+}
+.fl-bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: max(22px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 30px;
+  background: rgba(252, 251, 248, 0.76);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  backdrop-filter: blur(22px) saturate(160%);
+  box-shadow:
+    0 8px 35px #19191912,
+    inset 0 1px 1px #ffffff;
+}
+.fl-bottom-nav a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 14px 22px;
+  border-radius: 24px;
+  font: 10px var(--fl-mono);
+  letter-spacing: 0.08em;
+  color: #686864;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+.fl-bottom-nav a:hover {
+  background: #ffffff80;
+}
+.fl-bottom-nav a[aria-current="page"] {
+  background: #ffffffb3;
+  color: var(--fl-blue);
+  box-shadow: 0 1px 5px #19191906;
+}
+.fl-header {
+  height: 105px;
+  min-height: 0;
+}
+.fl-page-heading {
+  margin: 25px 0 32px;
+}
+.fl-page-heading h1 {
+  margin: 0;
+  font-size: 28px;
+}
+.fl-log-header {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+.fl-log-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.fl-add-catch {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  font: 10px var(--fl-mono);
+  letter-spacing: 0.08em;
+  padding: 9px 0 9px 14px;
+  white-space: nowrap;
+}
+.fl-add-catch:hover {
+  color: var(--fl-blue);
+}
+.fl-log-header .fl-filters {
+  justify-content: flex-end;
+}
+.fl-day {
+  grid-template-columns: 83px 1fr;
+  gap: 20px;
+}
+.fl-day-records {
+  padding-bottom: 0;
+  gap: 0;
+}
+.fl-date {
+  padding: 12px 0 0 8px;
+  font-size: 9px;
+}
+.fl-date b {
+  font-size: 16px;
+}
+.fl-date i {
+  top: 29px;
+  width: 7px;
+  height: 7px;
+  right: -4px;
+}
+.fl-catch-row {
+  display: grid;
+  grid-template-columns: 64px minmax(150px, 1.3fr) 75px minmax(
+      130px,
+      1.5fr
+    ) 60px 16px;
+  align-items: center;
+  gap: 15px;
+  min-height: 70px;
+  padding: 9px 12px 9px 0;
+  border-bottom: 1px solid #e6e5df;
+  border-radius: 0;
+  background: transparent;
+  transition: background 0.2s;
+}
+.fl-catch-row:hover {
+  background: #fcfbf899;
+}
+.fl-catch-row > .fl-pixel {
+  width: 64px;
+  height: 42px;
+}
+.fl-catch-name b {
+  font-size: 15px;
+}
+.fl-catch-name > span {
+  margin-top: 5px;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+.fl-catch-time,
+.fl-catch-location {
+  font-size: 10px;
+  gap: 7px;
+}
+.fl-catch-location {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.fl-catch-length {
+  font-size: 14px;
+}
+.fl-catch-length small {
+  font-size: 10px;
+}
+.fl-card-arrow {
+  width: 14px;
+}
+.fl-swimmer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 130px;
+  height: 84px;
+  margin: 0;
+  will-change: transform;
+}
+.fl-swimmer .fl-pixel {
+  width: 100%;
+  height: 100%;
+}
+.fl-fish-link.is-touched .fl-fish-tooltip {
+  display: block;
+}
+@media (max-width: 1050px) and (min-width: 761px) {
+  .fl-catch-row {
+    grid-template-columns: 58px minmax(125px, 1.2fr) 65px minmax(
+        100px,
+        1.4fr
+      ) 50px 14px;
+    gap: 10px;
+  }
+}
+@media (max-width: 760px) {
+  .fl-header {
+    height: 95px;
+    padding: 20px 0;
+    flex-wrap: nowrap;
+  }
+  .fl-brand {
+    gap: 13px;
+  }
+  .fl-brand b {
+    font-size: 18px;
+  }
+  .fl-brand small {
+    font-size: 7px;
+  }
+  .fl-settings-link {
+    padding-right: 0;
+  }
+  .fl-bottom-nav {
+    bottom: max(16px, env(safe-area-inset-bottom));
+    padding: 6px;
+    width: min(360px, calc(100% - 32px));
+    justify-content: space-between;
+  }
+  .fl-bottom-nav a {
+    gap: 6px;
+    padding: 13px 12px;
+    flex: 1;
+    font-size: 9px;
+  }
+  .fl-bottom-nav a svg {
+    width: 16px;
+    height: 16px;
+  }
+  .fl-log-heading h1 {
+    font-size: 20px;
+    padding-left: 11px;
+  }
+  .fl-add-catch {
+    font-size: 9px;
+  }
+  .fl-log-header .fl-filters {
+    gap: 12px;
+    justify-content: space-between;
+  }
+  .fl-day {
+    display: block;
+    margin-bottom: 15px;
+  }
+  .fl-date {
+    padding: 10px 0 3px;
+    gap: 5px;
+    font-size: 9px;
+  }
+  .fl-date b {
+    font-size: 11px;
+  }
+  .fl-catch-row {
+    grid-template-columns: 52px minmax(0, 1fr) 46px;
+    grid-template-rows: auto auto auto;
+    padding: 10px 0;
+    min-height: 79px;
+    gap: 4px 10px;
+  }
+  .fl-catch-row > .fl-pixel {
+    grid-column: 1;
+    grid-row: 1/4;
+    width: 52px;
+    height: 36px;
+    align-self: center;
+  }
+  .fl-catch-name {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .fl-catch-name b {
+    font-size: 14px;
+  }
+  .fl-catch-name > span {
+    font-size: 7px;
+    margin-top: 3px;
+  }
+  .fl-catch-time {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: 9px;
+  }
+  .fl-catch-location {
+    grid-column: 2;
+    grid-row: 3;
+    font-size: 9px;
+  }
+  .fl-catch-time svg,
+  .fl-catch-location svg {
+    width: 11px;
+    height: 11px;
+  }
+  .fl-catch-length {
+    grid-column: 3;
+    grid-row: 1/4;
+    font-size: 12px;
+    margin: 0;
+    align-self: center;
+    justify-self: end;
+  }
+  .fl-catch-length small {
+    font-size: 9px;
+  }
+  .fl-card-arrow {
+    display: none;
+  }
+  .fl-swimmer {
+    width: 88px;
+    height: 57px;
+    margin: 0;
+  }
+  .fl-swimmer .fl-pixel {
+    width: 100%;
+    height: 100%;
+  }
+}
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  .fl-bottom-nav {
+    background: #fcfbf8;
   }
 }

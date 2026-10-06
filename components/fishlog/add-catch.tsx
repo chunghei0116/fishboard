@@ -152,13 +152,7 @@ export default function AddCatch() {
       </Link>
       <div className="fl-form">
         <div className="fl-page-heading">
-          <span>ONE MORE STORY</span>
           <h1>ADD CATCH</h1>
-          <p>
-            {demo
-              ? "示範模式 · 紀錄只保存喺呢個瀏覽器。"
-              : "留住今日喺水邊遇到嘅佢。"}
-          </p>
         </div>
         <form
           onSubmit={(e) => void save(e)}

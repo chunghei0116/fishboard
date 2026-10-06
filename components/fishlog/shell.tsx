@@ -1,11 +1,11 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Settings, Plus, ArrowUpRight } from "lucide-react";
+import { Settings, House, Grid2X2, MapPin } from "lucide-react";
 import { useFishLog } from "./provider";
 export default function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname(),
-    { demo, user, error, loading } = useFishLog();
+    { error } = useFishLog();
   return (
     <div className="fl-shell">
       <header className="fl-header">
@@ -32,54 +32,37 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             <small>MY WATERS, MY CATCHES.</small>
           </span>
         </Link>
-        <nav aria-label="主要導覽">
-          {[
-            ["/", "HOME"],
-            ["/collection", "COLLECTION"],
-            ["/map", "MAP"],
-          ].map(([href, label]) => (
-            <Link
-              key={href}
-              href={href}
-              aria-current={path === href ? "page" : undefined}
-            >
-              {label}
-            </Link>
-          ))}
-          <Link
-            href="/settings"
-            aria-label="Settings"
-            aria-current={path === "/settings" ? "page" : undefined}
-          >
-            <Settings size={19} />
-          </Link>
-        </nav>
-      </header>
-      <div className="fl-mode">
-        <span>
-          <i />
-          {loading
-            ? "LOADING YOUR WATERS"
-            : demo
-              ? "DEMO JOURNAL · LOCAL BROWSER"
-              : `PRIVATE JOURNAL · ${user?.displayName || "MY CATCHES"}`}
-        </span>
-        <Link href="/add">
-          <Plus size={13} /> ADD CATCH
+        <Link
+          href="/settings"
+          className="fl-settings-link"
+          aria-label="Settings"
+          aria-current={path === "/settings" ? "page" : undefined}
+        >
+          <Settings size={19} />
         </Link>
-      </div>
+      </header>
+      <nav className="fl-bottom-nav" aria-label="主要導覽">
+        {[
+          { href: "/", label: "HOME", Icon: House },
+          { href: "/collection", label: "COLLECTION", Icon: Grid2X2 },
+          { href: "/map", label: "MAP", Icon: MapPin },
+        ].map(({ href, label, Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            aria-current={path === href ? "page" : undefined}
+          >
+            <Icon size={18} />
+            <span>{label}</span>
+          </Link>
+        ))}
+      </nav>
       {error && (
         <p className="fl-error" role="alert">
           {error} <Link href="/settings">登入設定</Link>
         </p>
       )}
       {children}
-      <footer className="fl-footer">
-        <span>DIFFERENT WATERS. SAME OBSESSION.</span>
-        <span>
-          ONE FISH, ONE STORY. <ArrowUpRight size={12} />
-        </span>
-      </footer>
     </div>
   );
 }
