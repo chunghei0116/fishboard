@@ -1,7 +1,8 @@
 import type { Catch, Species } from "@/data/types";
 import { validateCatch } from "@/lib/fish-log";
 import { privateUser, mutationOrigin } from "@/lib/firebase-auth";
-import { settings, fail, FishlogError } from "@/lib/fishlog-env";
+import { settings, fail, FishlogError, generationConfigured } from "@/lib/fishlog-env";
+export const maxDuration = 120;
 import { safeId } from "@/lib/fishlog-security";
 import {
   listDocuments,
@@ -111,8 +112,8 @@ export async function POST(request: Request) {
       throw new FishlogError((e as Error).message);
     }
     const e = settings(),
-      photo = file(form, "photo", 10 * 1024 * 1024),
-      pixel = file(form, "pixel", 2 * 1024 * 1024),
+      photo = file(form, "photo", 3 * 1024 * 1024),
+      pixel = file(form, "pixel", 1024 * 1024),
       reference = file(form, "reference", 1024 * 1024);
     if (photo) {
       if (!["image/jpeg", "image/png", "image/webp"].includes(photo.type))
@@ -153,8 +154,7 @@ export async function POST(request: Request) {
       } else if (
         !reference ||
         !photo ||
-        !e.AI ||
-        e.GENERATION_ENABLED !== "true"
+        !generationConfigured(e)
       )
         throw new FishlogError(
           "請提供透明 Pixel Fish；使用 AI 生圖需要原相及已設定的生圖服務。",

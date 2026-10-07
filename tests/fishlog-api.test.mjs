@@ -13,7 +13,7 @@ const url = (source) =>
     }).outputText,
   ).toString("base64");
 const env = url(
-  `export class FishlogError extends Error{constructor(message,status=400){super(message);this.status=status}};export function settings(){return globalThis.__v3.env};export function fail(e){return Response.json({error:e.message},{status:e.status||503})}`,
+  `export class FishlogError extends Error{constructor(message,status=400){super(message);this.status=status}};export function settings(){return globalThis.__v3.env};export function generationConfigured(e){return e.GENERATION_ENABLED==='true'&&!!(e.AI||(e.CLOUDFLARE_ACCOUNT_ID&&e.CLOUDFLARE_AI_TOKEN))};export function fail(e){return Response.json({error:e.message},{status:e.status||503})}`,
 );
 const security = url(
   await readFile(

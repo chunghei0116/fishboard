@@ -113,7 +113,10 @@ export function FishLogProvider({ children }: { children: React.ReactNode }) {
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ idToken }),
                 });
-                if (!r.ok) throw Error("未能連接私人帳戶，請重新登入");
+                if (!r.ok) {
+                  const result = await r.json() as { error?: string };
+                  throw Error(result.error || "未能連接私人帳戶，請重新登入");
+                }
               });
               if (current === epoch.current && active) {
                 setUser(next);

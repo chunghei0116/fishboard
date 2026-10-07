@@ -10,6 +10,6 @@ Let w = 2πt/T and θ = w + phase + 0.12 sin(0.37w + driftPhase).
 
 The sinusoid slows a fish before it turns; the direction change flips the portrait over 650ms. Different phase/period/depth values keep fish from swimming in lockstep. Vertical positions and travel width are bounded using the measured tank and sprite dimensions, including after a mobile resize.
 
-Time advances only while the aquarium is running. Pause, background tabs and reduced-motion preference preserve the current position. Touch opens the fish tooltip on the first tap; a second tap opens the species page. Keyboard focus exposes the same tooltip.
+Time advances only while the aquarium is running. Pause, background tabs and reduced-motion preference preserve the current position. Click, tap or keyboard activation toggles one selected fish tooltip. Selecting another fish replaces it; tapping empty tank space or pressing Escape dismisses it. Aquarium fish never navigate. Catch Log entries open catch details.
 
 Implementation: `lib/fish-swimming.ts` and `components/fishlog/swimming-fish.tsx`. Tests sample many turns on desktop, mobile and a tank with no horizontal room; they also verify continuity and agreement between movement and direction.

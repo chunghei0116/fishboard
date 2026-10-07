@@ -10,8 +10,15 @@ export type FishlogEnv = CloudinaryEnv & {
   FISHBOARD_ORIGIN?: string;
   GENERATION_ENABLED?: string;
   WORKERS_AI_MODEL?: string;
+  CLOUDFLARE_ACCOUNT_ID?: string;
+  CLOUDFLARE_AI_TOKEN?: string;
   AI?: Ai;
 };
+export function generationConfigured(e: FishlogEnv) {
+  return e.GENERATION_ENABLED === "true" && !!(
+    e.AI || (e.CLOUDFLARE_AI_TOKEN && /^[a-f0-9]{32}$/.test(e.CLOUDFLARE_ACCOUNT_ID || ""))
+  );
+}
 export function settings() {
   return env as unknown as FishlogEnv;
 }

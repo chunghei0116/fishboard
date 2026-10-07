@@ -19,6 +19,7 @@ export async function verifyToken(token: string) {
     return validateClaims(payload, e.FIREBASE_PROJECT_ID!);
   } catch (error) {
     if (error instanceof FishlogError) throw error;
+    console.warn("Firebase token verification failed", error instanceof Error ? error.name : "unknown");
     throw new FishlogError("登入已過期，請重新登入。", 401);
   }
 }

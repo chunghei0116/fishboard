@@ -51,9 +51,9 @@ export default function AddCatch() {
     if (!file) return;
     if (
       !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
-      file.size > 10 * 1024 * 1024
+      file.size > 3 * 1024 * 1024
     ) {
-      setError("請選擇 10 MB 以下 JPG、PNG 或 WebP。");
+      setError("請選擇 3 MB 以下 JPG、PNG 或 WebP。");
       setPhoto(null);
       setPreview("");
       return;
@@ -206,7 +206,7 @@ export default function AddCatch() {
                     onChange={(e) => void choose(e.target.files?.[0])}
                   />
                   {preview && <img src={preview} alt="待儲存的魚相" />}
-                  <small>JPG、PNG、WebP · 最大 10 MB</small>
+                  <small>JPG、PNG、WebP · 最大 3 MB</small>
                 </label>
                 {isNew && (
                   <label className="fl-file fl-wide">
@@ -219,9 +219,9 @@ export default function AddCatch() {
                         const f = e.target.files?.[0];
                         if (
                           f &&
-                          (f.type !== "image/png" || f.size > 2 * 1024 * 1024)
+                          (f.type !== "image/png" || f.size > 1024 * 1024)
                         ) {
-                          setError("Pixel Fish 請使用 2 MB 以下透明 PNG");
+                          setError("Pixel Fish 請使用 1 MB 以下透明 PNG");
                           setPixel(null);
                         } else setPixel(f || null);
                       }}

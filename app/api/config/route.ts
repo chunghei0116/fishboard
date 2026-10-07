@@ -1,4 +1,4 @@
-import { settings, firebaseReady } from "@/lib/fishlog-env";
+import { settings, firebaseReady, generationConfigured } from "@/lib/fishlog-env";
 import { cloudinaryConfigured } from "@/lib/cloudinary";
 export async function GET() {
   const e = settings();
@@ -15,7 +15,7 @@ export async function GET() {
       storageReady: cloudinaryConfigured(e),
       databaseReady: !!(e.FIREBASE_CLIENT_EMAIL && e.FIREBASE_PRIVATE_KEY),
       generationReady:
-        cloudinaryConfigured(e) && !!e.AI && e.GENERATION_ENABLED === "true",
+        cloudinaryConfigured(e) && generationConfigured(e),
     },
     { headers: { "Cache-Control": "no-store" } },
   );

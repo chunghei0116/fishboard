@@ -1,6 +1,6 @@
 import { decode, encode } from "fast-png";
 import jpeg from "jpeg-js";
-import { settings, FishlogError } from "./fishlog-env";
+import { settings, FishlogError, generationConfigured } from "./fishlog-env";
 import { pngDimensions, removeMatte } from "./fish-image";
 export function pngFile(bytes: Uint8Array, max = 1024, transparent = false) {
   pngDimensions(bytes, max);
@@ -21,7 +21,7 @@ export function pngFile(bytes: Uint8Array, max = 1024, transparent = false) {
 }
 export async function generateFish(reference: File) {
   const e = settings();
-  if (!e.AI || e.GENERATION_ENABLED !== "true")
+  if (!generationConfigured(e))
     throw new FishlogError("AI 生圖尚未設定，請先上載 Pixel Fish。", 503);
   const bytes = new Uint8Array(await reference.arrayBuffer());
   pngFile(bytes, 511);
@@ -35,7 +35,8 @@ export async function generateFish(reference: File) {
   );
   const response = new Response(form);
   const model = e.WORKERS_AI_MODEL || "@cf/black-forest-labs/flux-2-klein-4b";
-  const result = (await e.AI.run(
+  let result: { image?: string };
+  if (e.AI) result = (await e.AI.run(
     model as Parameters<Ai["run"]>[0],
     {
       multipart: {
@@ -44,6 +45,21 @@ export async function generateFish(reference: File) {
       },
     } as never,
   )) as unknown as { image?: string };
+  else {
+    const response = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${e.CLOUDFLARE_ACCOUNT_ID}/ai/run/${model}`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${e.CLOUDFLARE_AI_TOKEN}` },
+        body: form,
+        signal: AbortSignal.timeout(90000),
+      },
+    );
+    if (!response.ok) throw new FishlogError("生圖服務暫時未能完成，請稍後再試。", 502);
+    const body = await response.json() as { success?: boolean; result?: { image?: string } };
+    if (!body.success || !body.result) throw new FishlogError("生圖服務未有傳回圖片。", 502);
+    result = body.result;
+  }
   if (!result.image) throw new FishlogError("生圖服務未有傳回圖片。", 502);
   const raw = Uint8Array.from(atob(result.image), (c) => c.charCodeAt(0));
   if (raw.length > 10 * 1024 * 1024)
