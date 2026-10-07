@@ -27,13 +27,15 @@ export default function Landing() {
     <main className="fl-landing">
       <figure className="fl-landing-art">
         <img
-          src="/fish/landing-waters.svg"
-          alt="像素海邊插畫：釣魚人站在碼頭，遠處有山、帆船和夕陽"
+          src="/fish/landing-coast.webp"
+          alt="夕陽下的海邊，浪花輕輕拍打沙灘"
+          fetchPriority="high"
+          decoding="async"
         />
         <figcaption>DIFFERENT WATERS. SAME OBSESSION.</figcaption>
       </figure>
       <section className="fl-login-widget" aria-label="Google 登入">
-        <span className="fl-login-label">YOUR OWN FISHING JOURNAL</span>
+        <span className="fl-login-label">MY WATERS, MY CATCHES.</span>
         <h1>
           Every catch.
           <br />A little story<span>.</span>

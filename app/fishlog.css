@@ -1432,118 +1432,186 @@ body {
 .fl-fish-tooltip[hidden] {
   display: none !important;
 }
+/* The signed-out journal opens on the shore. */
+.fl-shell.fl-shell-guest {
+  max-width: none;
+  padding: 0;
+  position: relative;
+  isolation: isolate;
+  min-height: 100svh;
+  background: #183b48;
+}
+.fl-shell-guest .fl-header {
+  position: absolute;
+  z-index: 2;
+  inset: 0 0 auto;
+  height: auto;
+  padding: max(28px, env(safe-area-inset-top)) clamp(24px, 5vw, 72px);
+  color: #fff;
+}
+.fl-shell-guest .fl-brand small {
+  color: rgba(255, 255, 255, 0.8);
+}
+.fl-shell-guest .fl-brand i {
+  background: #b5e3f6;
+}
 .fl-landing {
   display: grid;
-  grid-template-columns: 1.15fr 1fr;
-  gap: 75px;
-  align-items: center;
-  min-height: calc(100svh - 180px);
-  padding: 20px 0 60px;
+  place-items: center;
+  min-height: 100svh;
+  padding: 132px 24px 100px;
+  box-sizing: border-box;
+  position: relative;
 }
 .fl-landing-art {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
   margin: 0;
-  position: relative;
+  overflow: hidden;
+}
+.fl-landing-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 30, 40, 0.3),
+    rgba(8, 30, 40, 0.06) 40%,
+    rgba(8, 30, 40, 0.36)
+  );
 }
 .fl-landing-art img {
   display: block;
   width: 100%;
-  height: auto;
-  border-radius: 8px;
-  image-rendering: pixelated;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
 }
 .fl-landing-art figcaption {
   position: absolute;
-  left: 24px;
-  bottom: 22px;
-  color: #445650;
+  z-index: 1;
+  bottom: max(28px, env(safe-area-inset-bottom));
+  inset-inline: 20px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.9);
   font: 9px var(--fl-mono);
-  letter-spacing: 0.13em;
+  letter-spacing: 0.18em;
 }
 .fl-login-widget {
-  max-width: 420px;
-  padding: 15px 0;
+  box-sizing: border-box;
+  width: min(100%, 440px);
+  min-width: 0;
+  padding: clamp(28px, 5vw, 46px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 30px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.66),
+    rgba(237, 247, 250, 0.4)
+  );
+  -webkit-backdrop-filter: blur(22px) saturate(145%);
+  backdrop-filter: blur(22px) saturate(145%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.2),
+    0 18px 70px rgba(7, 32, 44, 0.16);
+  color: #142d38;
 }
 .fl-login-label {
   font: 9px var(--fl-mono);
   letter-spacing: 0.14em;
-  color: var(--fl-muted);
+  color: #35515d;
 }
 .fl-login-widget h1 {
-  font-size: 48px;
+  font-size: clamp(34px, 5vw, 48px);
   font-weight: 500;
   letter-spacing: -0.045em;
   line-height: 1.13;
-  margin: 25px 0 20px;
+  margin: 26px 0 20px;
 }
 .fl-login-widget h1 span {
-  color: var(--fl-blue);
+  color: #24758e;
 }
 .fl-login-slogan {
-  font-size: 15px;
-  color: var(--fl-muted);
+  font-size: 14px;
+  color: #35515d;
   letter-spacing: 0.06em;
-  margin: 0 0 45px;
+  line-height: 1.8;
+  margin: 0 0 34px;
 }
 .fl-google-login {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 13px;
+  gap: 12px;
   width: 100%;
-  border: 1px solid var(--fl-border);
-  border-radius: 6px;
-  background: var(--fl-surface);
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 4px 16px rgba(19, 58, 72, 0.06);
   min-height: 54px;
-  color: var(--fl-text);
+  color: #142d38;
   font-size: 13px !important;
-  transition: border-color 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+}
+.fl-google-login svg {
+  flex-shrink: 0;
 }
 .fl-google-login:hover {
-  border-color: #a1b0b8;
+  background: rgba(255, 255, 255, 0.83);
+  border-color: #fff;
 }
 .fl-google-login:disabled {
-  opacity: 0.55;
+  opacity: 0.65;
   cursor: wait;
 }
 .fl-login-note {
   font-size: 11px;
-  color: var(--fl-muted);
-  line-height: 1.7;
-  margin-top: 16px;
+  color: #35515d;
+  line-height: 1.8;
+  margin: 17px 0 0;
 }
 .fl-login-error {
   font-size: 12px;
   line-height: 1.8;
-  color: #944934;
+  color: #742d23;
   margin-top: 20px;
+  overflow-wrap: anywhere;
 }
-@media (max-width: 760px) {
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  .fl-login-widget {
+    background: rgba(242, 249, 251, 0.92);
+  }
+}
+@media (max-width: 600px) {
+  .fl-shell-guest .fl-header {
+    padding-inline: 22px;
+  }
+  .fl-shell-guest .fl-brand {
+    gap: 16px;
+  }
   .fl-landing {
-    grid-template-columns: 1fr;
-    gap: 30px;
-    min-height: 0;
-    padding: 10px 0 0;
-  }
-  .fl-landing-art img {
-    aspect-ratio: 1.2;
-    object-fit: cover;
-    object-position: 50% 65%;
-  }
-  .fl-landing-art figcaption {
-    left: 16px;
-    bottom: 16px;
-    font-size: 7px;
+    padding: 126px 20px 92px;
   }
   .fl-login-widget {
-    max-width: none;
-    padding: 0 8px;
+    border-radius: 26px;
+    padding: 30px 25px;
+  }
+  .fl-login-label {
+    font-size: 8px;
   }
   .fl-login-widget h1 {
-    font-size: 39px;
-    margin: 18px 0 15px;
+    margin-top: 22px;
   }
   .fl-login-slogan {
-    margin-bottom: 28px;
     font-size: 13px;
   }
 }

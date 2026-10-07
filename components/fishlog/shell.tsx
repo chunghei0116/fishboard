@@ -8,7 +8,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname(),
     { error, user } = useFishLog();
   return (
-    <div className="fl-shell">
+    <div className={`fl-shell${user ? "" : " fl-shell-guest"}`}>
       <header className="fl-header">
         <Link href="/" className="fl-brand" aria-label="Fish Log 首頁">
           <svg
