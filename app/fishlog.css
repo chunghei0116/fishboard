@@ -1547,3 +1547,303 @@ body {
     font-size: 13px;
   }
 }
+
+/* A quiet record sheet, above the current journal. */
+.fl-catch-dialog {
+  inset: 0;
+  margin: auto;
+  padding: 0;
+  width: min(560px, calc(100vw - 40px));
+  max-width: none;
+  max-height: min(820px, 88dvh);
+  border: 1px solid var(--fl-border);
+  border-radius: 12px;
+  background: var(--fl-surface);
+  color: var(--fl-text);
+  overflow: hidden;
+}
+.fl-catch-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.fl-catch-dialog::backdrop {
+  background: rgb(25 25 25 / 26%);
+  backdrop-filter: blur(3px);
+}
+.fl-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 26px;
+  border-bottom: 1px solid var(--fl-border);
+  flex-shrink: 0;
+}
+.fl-dialog-header h2 {
+  margin: 0;
+  font: 500 16px var(--fl-mono);
+  letter-spacing: 0.17em;
+}
+.fl-dialog-close,
+.fl-cancel {
+  border: 0;
+  background: transparent;
+  color: var(--fl-muted);
+}
+.fl-dialog-close {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+.fl-dialog-close:hover {
+  background: var(--fl-bg);
+}
+.fl-dialog-handle {
+  display: none;
+}
+.fl-catch-dialog .fl-form {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  width: 100%;
+  margin: 0;
+}
+.fl-dialog-fields {
+  border: 0;
+  margin: 0;
+  padding: 24px 26px 12px;
+  min-width: 0;
+}
+.fl-catch-dialog .fl-form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.fl-catch-dialog label {
+  gap: 7px;
+}
+.fl-catch-dialog input,
+.fl-catch-dialog select,
+.fl-catch-dialog textarea {
+  min-width: 0;
+  padding: 11px 12px;
+  font-size: 14px;
+  background: transparent;
+  border-radius: 5px;
+}
+.fl-catch-dialog textarea {
+  min-height: 80px;
+}
+.fl-name-hint {
+  margin-top: -8px;
+  color: var(--fl-muted);
+}
+.fl-measurement {
+  margin-top: 4px;
+}
+.fl-unit-input {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--fl-border);
+}
+.fl-catch-dialog .fl-unit-input input {
+  border: 0;
+  border-radius: 0;
+  background: var(--fl-bg);
+  font: 24px var(--fl-mono);
+  padding: 14px 12px;
+}
+.fl-unit-input > span {
+  font: 12px var(--fl-mono);
+  padding: 0 12px;
+}
+.fl-compact-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--fl-border);
+}
+.fl-compact-section h3 {
+  margin: 0 0 16px;
+  color: var(--fl-muted);
+  font: 11px var(--fl-mono);
+  letter-spacing: 0.13em;
+}
+.fl-period-field {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.fl-period-field legend {
+  font-size: 12px;
+  color: var(--fl-muted);
+  padding: 0;
+  margin-bottom: 7px;
+}
+.fl-period-switch {
+  display: flex;
+  border: 1px solid var(--fl-border);
+  border-radius: 5px;
+  padding: 3px;
+  height: 44px;
+  box-sizing: border-box;
+}
+.fl-period-switch label {
+  flex: 1;
+  position: relative;
+  cursor: pointer;
+}
+.fl-form .fl-period-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+}
+.fl-period-switch span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 100%;
+  border-radius: 3px;
+}
+.fl-period-switch input:checked + span {
+  color: var(--fl-blue);
+  background: rgb(39 141 229 / 8%);
+}
+.fl-period-switch input:focus-visible + span {
+  outline: 2px solid var(--fl-blue);
+  outline-offset: 1px;
+}
+.fl-photo-picker {
+  position: relative;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 16px !important;
+  padding: 16px;
+  margin: 22px 0 10px;
+  border: 1px dashed var(--fl-border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.fl-photo-picker > input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.fl-photo-picker:focus-within {
+  outline: 2px solid var(--fl-blue);
+  outline-offset: 2px;
+}
+.fl-photo-picker > img {
+  width: 60px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 3px;
+}
+.fl-photo-picker > span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.fl-photo-picker b {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fl-text);
+}
+.fl-optional-section {
+  border-top: 1px solid var(--fl-border);
+  padding: 15px 0;
+}
+.fl-optional-section summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--fl-muted);
+}
+.fl-optional-section[open] summary {
+  margin-bottom: 16px;
+  color: var(--fl-text);
+}
+.fl-pixel-upload input {
+  font-size: 12px;
+}
+.fl-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 22px;
+  padding: 16px 26px max(16px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--fl-border);
+  background: var(--fl-surface);
+  flex-shrink: 0;
+}
+.fl-dialog-footer .fl-primary {
+  padding: 13px 23px;
+  font: 11px var(--fl-mono);
+  letter-spacing: 0.09em;
+}
+.fl-dialog-footer .fl-cancel {
+  font-size: 12px;
+  padding: 10px;
+}
+.fl-catch-dialog .fl-error {
+  margin: 0;
+  padding: 12px 26px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.fl-add-catch {
+  border: 0;
+  background: transparent;
+}
+.fl-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  overflow: hidden;
+}
+@media (max-width: 600px) {
+  .fl-catch-dialog {
+    inset: auto 0 0;
+    margin: 0;
+    width: 100%;
+    max-height: 92dvh;
+    border-radius: 16px 16px 0 0;
+    border-bottom: 0;
+  }
+  .fl-dialog-handle {
+    display: block;
+    flex-shrink: 0;
+    width: 34px;
+    height: 4px;
+    margin: 10px auto 0;
+    background: var(--fl-border);
+    border-radius: 3px;
+  }
+  .fl-dialog-header {
+    padding: 13px 20px;
+  }
+  .fl-dialog-fields {
+    padding: 20px 20px 10px;
+  }
+  .fl-dialog-footer {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .fl-catch-dialog input,
+  .fl-catch-dialog select,
+  .fl-catch-dialog textarea {
+    font-size: 16px;
+  }
+}
+
+.fl-dialog-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}

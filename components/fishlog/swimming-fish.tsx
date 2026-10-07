@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useAnimationFrame, useMotionValue } from "framer-motion";
 import type { SpeciesSummary } from "@/data/types";
 import { swimPosition, swimProfile } from "@/lib/fish-swimming";
+import { speciesName } from "@/lib/fish-log";
 import PixelFish from "./pixel-fish";
 export default function SwimmingFish({
   fish,
@@ -86,7 +87,7 @@ export default function SwimmingFish({
       <button
         type="button"
         className={`fl-fish-link${selected ? " is-selected" : ""}`}
-        aria-label={`${fish.chineseName}，${fish.totalCaught} 次釣獲`}
+        aria-label={`${speciesName(fish)}，${fish.totalCaught} 次釣獲`}
         aria-expanded={selected}
         aria-describedby={selected ? `fish-tooltip-${fish.id}` : undefined}
         onClick={onSelect}
@@ -104,8 +105,10 @@ export default function SwimmingFish({
           role="tooltip"
           hidden={!selected}
         >
-          <b>{fish.chineseName}</b>
-          <span>{fish.englishName}</span>
+          <b>{speciesName(fish)}</b>
+          {fish.chineseName && fish.englishName && (
+            <span>{fish.englishName}</span>
+          )}
           <small>
             {fish.totalCaught} catches · Best{" "}
             {fish.bestLength ? `${fish.bestLength} cm` : "—"}

@@ -64,6 +64,9 @@ export function validateCatch(
     throw Error("日期無效");
   const time = string("time", 5);
   if (time && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) throw Error("時間無效");
+  const period = string("period", 10);
+  if (period && !["morning", "evening"].includes(period))
+    throw Error("時段無效");
   const number = (key: string, min: number, max: number) => {
     const v = input[key];
     if (v === undefined || v === "") return undefined;
@@ -88,6 +91,7 @@ export function validateCatch(
     speciesId,
     date,
     time,
+    period: period as Catch["period"],
     location,
     length,
     weight,
@@ -99,4 +103,28 @@ export function validateCatch(
     lure: string("lure", 160),
     note: string("note", 4000),
   };
+}
+
+export function validateSpeciesNames(input: Record<string, unknown>) {
+  const chineseName =
+    typeof input.chineseName === "string" ? input.chineseName.trim() : "";
+  const englishName =
+    typeof input.englishName === "string" ? input.englishName.trim() : "";
+  if (
+    (!chineseName && !englishName) ||
+    chineseName.length > 80 ||
+    englishName.length > 100
+  )
+    throw Error("請填寫中文或英文魚名，至少一個。");
+  return { chineseName, englishName };
+}
+export function speciesName(species: Species) {
+  return species.chineseName || species.englishName;
+}
+export function catchTimeLabel(record: Pick<Catch, "period" | "time">) {
+  return record.period === "morning"
+    ? "早上"
+    : record.period === "evening"
+      ? "晚上"
+      : record.time;
 }

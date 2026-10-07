@@ -1,7 +1,12 @@
 import type { Catch, Species } from "@/data/types";
-import { validateCatch } from "@/lib/fish-log";
+import { validateCatch, validateSpeciesNames } from "@/lib/fish-log";
 import { privateUser, mutationOrigin } from "@/lib/firebase-auth";
-import { settings, fail, FishlogError, generationConfigured } from "@/lib/fishlog-env";
+import {
+  settings,
+  fail,
+  FishlogError,
+  generationConfigured,
+} from "@/lib/fishlog-env";
 export const maxDuration = 120;
 import { safeId } from "@/lib/fishlog-security";
 import {
@@ -93,6 +98,7 @@ export async function POST(request: Request) {
     for (const key of [
       "date",
       "time",
+      "period",
       "location",
       "rod",
       "reel",
@@ -136,26 +142,23 @@ export async function POST(request: Request) {
       : await getDocument(uid, "species", speciesId);
     if (!newSpecies && !existing) throw new FishlogError("魚種不存在。", 404);
     if (newSpecies) {
-      const chineseName = String(form.get("chineseName") || "").trim(),
-        englishName = String(form.get("englishName") || "").trim(),
-        scientificName = String(form.get("scientificName") || "").trim();
-      if (
-        !chineseName ||
-        !englishName ||
-        chineseName.length > 80 ||
-        englishName.length > 100 ||
-        scientificName.length > 120
-      )
-        throw new FishlogError("請填寫有效魚種名稱。");
+      let names: ReturnType<typeof validateSpeciesNames>;
+      try {
+        names = validateSpeciesNames({
+          chineseName: form.get("chineseName"),
+          englishName: form.get("englishName"),
+        });
+      } catch (error) {
+        throw new FishlogError((error as Error).message);
+      }
+      const { chineseName, englishName } = names;
+      const scientificName = String(form.get("scientificName") || "").trim();
+      if (scientificName.length > 120) throw new FishlogError("學名過長。");
       if (pixel) {
         if (pixel.type !== "image/png")
           throw new FishlogError("Pixel Fish 必須係 PNG。");
         pngFile(new Uint8Array(await pixel.arrayBuffer()), 1024, true);
-      } else if (
-        !reference ||
-        !photo ||
-        !generationConfigured(e)
-      )
+      } else if (!reference || !photo || !generationConfigured(e))
         throw new FishlogError(
           "請提供透明 Pixel Fish；使用 AI 生圖需要原相及已設定的生圖服務。",
           503,

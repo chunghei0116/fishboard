@@ -3,7 +3,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { Clock3, MapPin, ArrowRight, Plus } from "lucide-react";
 import type { Catch, Species } from "@/data/types";
-import { filterCatches } from "@/lib/fish-log";
+import AddCatch from "./add-catch";
+import { filterCatches, speciesName, catchTimeLabel } from "@/lib/fish-log";
 import PixelFish from "./pixel-fish";
 export function CatchRows({
   catches,
@@ -43,12 +44,14 @@ export function CatchRows({
                     >
                       <PixelFish species={fish} />
                       <div className="fl-catch-name">
-                        <b>{fish.chineseName}</b>
-                        <span>{fish.englishName.toUpperCase()}</span>
+                        <b>{speciesName(fish)}</b>
+                        {fish.chineseName && fish.englishName && (
+                          <span>{fish.englishName.toUpperCase()}</span>
+                        )}
                       </div>
                       <span className="fl-catch-time">
                         <Clock3 size={14} />
-                        {c.time || "—"}
+                        {catchTimeLabel(c) || "—"}
                       </span>
                       <span className="fl-catch-location">
                         <MapPin size={14} />
@@ -75,6 +78,7 @@ export default function CatchLog({
   catches: Catch[];
   species: Species[];
 }) {
+  const [adding, setAdding] = useState(false);
   const [selectedSpecies, setSpecies] = useState(""),
     [location, setLocation] = useState(""),
     [year, setYear] = useState("");
@@ -88,9 +92,13 @@ export default function CatchLog({
       <div className="fl-section-header fl-log-header">
         <div className="fl-log-heading">
           <h1>CATCH LOG</h1>
-          <Link className="fl-add-catch" href="/add">
+          <button
+            type="button"
+            className="fl-add-catch"
+            onClick={() => setAdding(true)}
+          >
             <Plus size={14} /> ADD CATCH
-          </Link>
+          </button>
         </div>
         <div className="fl-filters">
           <button
@@ -115,7 +123,7 @@ export default function CatchLog({
               .filter((s) => catches.some((c) => c.speciesId === s.id))
               .map((s) => (
                 <option value={s.id} key={s.id}>
-                  {s.chineseName}
+                  {speciesName(s)}
                 </option>
               ))}
           </select>
@@ -144,6 +152,7 @@ export default function CatchLog({
           </select>
         </div>
       </div>
+      {adding && <AddCatch onClose={() => setAdding(false)} />}
       <CatchRows catches={filtered} species={species} />
       {!filtered.length && (
         <div className="fl-empty">

@@ -21,7 +21,7 @@ Firestore data lives below `users/{uid}/species/{id}`, `users/{uid}/catches/{id}
 
 Set `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`. New original photos and new species sprites are uploaded with `type=authenticated`, `overwrite=false`, under `fishboard/{requestId}/source` and `fishboard/{requestId}/badge`. The image API checks the Firebase uid and streams bytes with `private, no-store`. Signed asset URLs are not exposed to browsers.
 
-Existing species reuse their pixel image; adding another catch does not call AI or create another Aquarium fish. For new species, upload a transparent RGBA PNG (max 1 MiB, 1024×1024) or use Workers AI from an original photo. Original photos may be JPG/PNG/WebP up to 3 MiB. No paid Cloudinary background-removal add-on is enabled.
+Existing species reuse their pixel image; adding another catch does not call AI or create another Aquarium fish. For new species, upload a transparent RGBA PNG (max 1 MiB, 1024×1024) or use Workers AI from an original photo. The browser accepts JPG/PNG/WebP photos up to 20 MiB and automatically optimizes large images to at most 2 MiB before upload, retaining the whole frame and limiting the longest edge to 2560px. Smaller images within those bounds are preserved. The server retains a 3 MiB per-photo limit. HEIC is not accepted. No paid Cloudinary background-removal add-on is enabled.
 
 ## Workers AI
 
@@ -71,8 +71,14 @@ Vercel uses `vercel.json` → `npm run build:vercel` (`next build --webpack`) to
 
 27 automated tests passed. Vercel build passed; lint had zero errors. Actual Workers AI generation, transparent PNG processing, authenticated Cloudinary upload/read and dedicated service-account Firestore write/read passed. Chrome completed Google login and the new-species save flow; both saved images loaded, and reloading the homepage retained the record. Aquarium selection showed a tooltip without navigation. This check used the repository sample fish image; fidelity with varied real catch photos still needs user acceptance. Verification records and uploaded assets are removed after checks.
 
-Original uploads are limited to 3 MiB and manual sprites to 1 MiB to keep the multipart request within Vercel function payload limits.
+Server uploads are limited to 3 MiB for photos and 1 MiB for manual sprites. The frontend automatically compresses larger source photos to at most 2 MiB, keeping the multipart request within Vercel function payload limits.
 
 ## Production verification recorded on 2026-10-07
 
 Vercel production deployment of commit `a6d086c` reached READY and served `fishboard-three.vercel.app`. Chrome completed Google login, created a new species using the sample image with Workers AI, loaded the original photo and generated transparent sprite, and reloaded the homepage with the persisted catch. Selecting its fish displayed one tooltip while staying on the homepage. Settings showed login, storage and generation Ready. The owned temporary catch, species, request and both authenticated images were removed; daily generation usage was retained. No error/fatal runtime logs were returned for this deployment during the check window. This is service and sample-input verification, not acceptance of fidelity across varied real fish photos.
+
+## Compact catch sheet
+
+The homepage opens Add Catch in a native modal dialog; below 600px it becomes a bottom sheet. The header and actions remain visible while the fields scroll. New species require at least one Chinese or English name. Length and weight precede date, morning/evening and location. Precise legacy times remain visible; new periods do not invent a clock time. Gear, Notes and manual pixel upload are collapsible. Scientific name and raw coordinates remain compatible with old data but are omitted from this simplified form.
+
+Chrome verification compressed an 18.7 MiB PNG to a 0.95 MiB JPEG at 2560px, then saved a private catch with only its English name, evening period, length and weight. Both stored images loaded successfully. Only explicitly marked temporary verification records and assets are removed. Chrome also rendered the bottom sheet in a 390px viewport with fixed header/actions and a scrolling form.

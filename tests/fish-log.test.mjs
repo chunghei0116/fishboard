@@ -95,3 +95,40 @@ test("validation rejects impossible dates, oversized fields and coordinate misma
   ])
     assert.throws(() => selectors.validateCatch({ ...valid, ...bad }));
 });
+
+test("one fish name is sufficient; missing names and oversized names are rejected", () => {
+  assert.deepEqual(
+    selectors.validateSpeciesNames({
+      chineseName: "  黃腳鱲 ",
+      englishName: "",
+    }),
+    { chineseName: "黃腳鱲", englishName: "" },
+  );
+  assert.deepEqual(
+    selectors.validateSpeciesNames({ englishName: " Seabream " }),
+    { chineseName: "", englishName: "Seabream" },
+  );
+  assert.throws(() =>
+    selectors.validateSpeciesNames({ chineseName: "  ", englishName: "" }),
+  );
+  assert.throws(() =>
+    selectors.validateSpeciesNames({ chineseName: "魚".repeat(81) }),
+  );
+  assert.equal(
+    selectors.speciesName({ chineseName: "", englishName: "Seabream" }),
+    "Seabream",
+  );
+});
+test("morning and evening are stored as periods without inventing a precise catch time", () => {
+  const record = selectors.validateCatch({
+    speciesId: "a",
+    date: "2026-10-07",
+    location: "Harbour",
+    period: "evening",
+  });
+  assert.equal(record.period, "evening");
+  assert.equal(record.time, undefined);
+  assert.equal(selectors.catchTimeLabel(record), "晚上");
+  assert.equal(selectors.catchTimeLabel({ time: "19:42" }), "19:42");
+  assert.throws(() => selectors.validateCatch({ ...record, period: "noon" }));
+});

@@ -1,10 +1,14 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { X, Camera, Sun, Moon } from "lucide-react";
 import { useFishLog } from "./provider";
-import { validateCatch } from "@/lib/fish-log";
+import {
+  validateCatch,
+  validateSpeciesNames,
+  speciesName,
+} from "@/lib/fish-log";
+import { preparePhoto } from "@/lib/photo-upload";
 import type { Catch, Dataset, Species } from "@/data/types";
 function dataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -35,7 +39,7 @@ async function aiReference(file: File) {
   );
   return new File([blob], "reference.png", { type: "image/png" });
 }
-export default function AddCatch() {
+export default function AddCatch({ onClose }: { onClose?: () => void }) {
   const { data, demo, user, config, saveDemo, refresh } = useFishLog();
   const router = useRouter();
   const [speciesId, setSpeciesId] = useState(data.species[0]?.id || "new"),
@@ -43,28 +47,57 @@ export default function AddCatch() {
     [pixel, setPixel] = useState<File | null>(null),
     [preview, setPreview] = useState(""),
     [busy, setBusy] = useState(false),
+    [preparing, setPreparing] = useState(false),
+    [period, setPeriod] = useState<"morning" | "evening" | "">(""),
     [error, setError] = useState("");
   const request = useRef<string | null>(null);
   const submitting = useRef(false);
   const isNew = speciesId === "new";
+  const dialog = useRef<HTMLDialogElement>(null);
+  const photoSelection = useRef(0);
+  useEffect(() => {
+    const element = dialog.current;
+    const selection = photoSelection;
+    const previous = document.body.style.overflow;
+    element?.showModal();
+    element?.querySelector("select")?.focus();
+    document.body.style.overflow = "hidden";
+    return () => {
+      selection.current++;
+      element?.close();
+      document.body.style.overflow = previous;
+    };
+  }, []);
+  function dismiss() {
+    if (busy || preparing) return;
+    dialog.current?.close();
+    if (onClose) onClose();
+    else router.replace("/");
+  }
   async function choose(file: File | undefined) {
-    if (!file) return;
-    if (
-      !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
-      file.size > 3 * 1024 * 1024
-    ) {
-      setError("請選擇 3 MB 以下 JPG、PNG 或 WebP。");
-      setPhoto(null);
-      setPreview("");
-      return;
-    }
-    setPhoto(file);
-    setPreview(await dataURL(file));
+    const selection = ++photoSelection.current;
     request.current = null;
+    setError("");
+    setPhoto(null);
+    setPreview("");
+    if (!file) return;
+    setPreparing(true);
+    try {
+      const optimized = await preparePhoto(file);
+      const nextPreview = await dataURL(optimized);
+      if (photoSelection.current !== selection) return;
+      setPhoto(optimized);
+      setPreview(nextPreview);
+    } catch (error) {
+      if (photoSelection.current === selection)
+        setError((error as Error).message);
+    } finally {
+      if (photoSelection.current === selection) setPreparing(false);
+    }
   }
   async function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submitting.current) return;
+    if (submitting.current || preparing) return;
     submitting.current = true;
     setBusy(true);
     setError("");
@@ -76,7 +109,7 @@ export default function AddCatch() {
       const raw: Record<string, unknown> = {};
       for (const key of [
         "date",
-        "time",
+        "period",
         "location",
         "rod",
         "reel",
@@ -94,10 +127,10 @@ export default function AddCatch() {
       if (demo) {
         let species: Species | undefined;
         if (isNew) {
-          const chineseName = String(form.get("chineseName") || "").trim(),
-            englishName = String(form.get("englishName") || "").trim();
-          if (!chineseName || !englishName)
-            throw Error("請填寫魚種中文及英文名");
+          const { chineseName, englishName } = validateSpeciesNames({
+            chineseName: form.get("chineseName"),
+            englishName: form.get("englishName"),
+          });
           if (!pixel)
             throw Error(
               "示範模式新增魚種需要上載透明 PNG 像素魚；AI 生圖需要私人帳戶。",
@@ -125,6 +158,11 @@ export default function AddCatch() {
         return;
       }
       if (!user) throw Error("請先登入私人帳戶");
+      if (isNew)
+        validateSpeciesNames({
+          chineseName: form.get("chineseName"),
+          englishName: form.get("englishName"),
+        });
       form.set("speciesId", speciesId);
       form.set("requestId", id);
       if (photo) form.set("photo", photo);
@@ -146,99 +184,112 @@ export default function AddCatch() {
     }
   }
   return (
-    <>
-      <Link href="/" className="fl-back">
-        <ArrowLeft size={14} /> BACK TO CATCH LOG
-      </Link>
-      <div className="fl-form">
-        <div className="fl-page-heading">
-          <h1>ADD CATCH</h1>
-        </div>
-        <form
-          onSubmit={(e) => void save(e)}
-          onChange={() => {
-            if (!busy) request.current = null;
-          }}
+    <dialog
+      ref={dialog}
+      className="fl-catch-dialog"
+      aria-labelledby="add-catch-title"
+      onCancel={(event) => {
+        event.preventDefault();
+        dismiss();
+      }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) dismiss();
+      }}
+    >
+      <div className="fl-dialog-handle" aria-hidden="true" />
+      <header className="fl-dialog-header">
+        <h2 id="add-catch-title">ADD CATCH</h2>
+        <button
+          type="button"
+          className="fl-dialog-close"
+          onClick={dismiss}
+          disabled={busy || preparing}
+          aria-label="關閉新增漁獲"
         >
-          <fieldset
-            disabled={busy}
-            style={{ border: 0, padding: 0, margin: 0 }}
-          >
-            <section className="fl-form-section">
-              <h2>01 / THE FISH</h2>
-              <div className="fl-form-grid">
-                <label className="fl-wide">
-                  魚種
-                  <select
-                    value={speciesId}
-                    onChange={(e) => setSpeciesId(e.target.value)}
-                  >
-                    {data.species.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.chineseName} / {s.englishName}
-                      </option>
-                    ))}
-                    <option value="new">＋ 新魚種</option>
-                  </select>
-                </label>
-                {isNew && (
-                  <>
-                    <label>
-                      中文魚名
-                      <input name="chineseName" required maxLength={80} />
-                    </label>
-                    <label>
-                      英文魚名
-                      <input name="englishName" required maxLength={100} />
-                    </label>
-                    <label className="fl-wide">
-                      學名（選填）
-                      <input name="scientificName" maxLength={120} />
-                    </label>
-                  </>
-                )}
-                <label className="fl-file fl-wide">
-                  原始魚相（選填）
-                  <input
-                    name="photo"
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={(e) => void choose(e.target.files?.[0])}
-                  />
-                  {preview && <img src={preview} alt="待儲存的魚相" />}
-                  <small>JPG、PNG、WebP · 最大 3 MB</small>
-                </label>
-                {isNew && (
-                  <label className="fl-file fl-wide">
-                    Pixel Fish
+          <X size={19} />
+        </button>
+      </header>
+      <form
+        className="fl-form"
+        onSubmit={(event) => void save(event)}
+        onChange={() => {
+          if (!busy) request.current = null;
+        }}
+      >
+        <div className="fl-dialog-body">
+          <fieldset disabled={busy || preparing} className="fl-dialog-fields">
+            <div className="fl-form-grid">
+              <label className="fl-wide">
+                魚種
+                <select
+                  autoFocus
+                  value={speciesId}
+                  onChange={(event) => setSpeciesId(event.target.value)}
+                >
+                  {data.species.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {speciesName(s)}
+                    </option>
+                  ))}
+                  <option value="new">＋ 新魚種</option>
+                </select>
+              </label>
+              {isNew && (
+                <>
+                  <label>
+                    中文魚名
                     <input
-                      name="pixel"
-                      type="file"
-                      accept="image/png"
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        if (
-                          f &&
-                          (f.type !== "image/png" || f.size > 1024 * 1024)
-                        ) {
-                          setError("Pixel Fish 請使用 1 MB 以下透明 PNG");
-                          setPixel(null);
-                        } else setPixel(f || null);
-                      }}
+                      name="chineseName"
+                      maxLength={80}
+                      aria-describedby="fish-name-hint"
                     />
-                    <small>
-                      {demo
-                        ? "示範模式請提供透明 PNG 像素魚。"
-                        : config?.generationReady
-                          ? "可以自行上載透明 PNG；留空會用原始魚相生成。"
-                          : "AI 生圖尚未設定，請自行上載透明 PNG 像素魚。"}
-                    </small>
                   </label>
-                )}
-              </div>
-            </section>
-            <section className="fl-form-section">
-              <h2>02 / WHEN & WHERE</h2>
+                  <label>
+                    英文魚名
+                    <input
+                      name="englishName"
+                      maxLength={100}
+                      aria-describedby="fish-name-hint"
+                    />
+                  </label>
+                  <small className="fl-wide fl-name-hint" id="fish-name-hint">
+                    中文或英文，填一個即可。
+                  </small>
+                </>
+              )}
+              <label className="fl-measurement">
+                長度{" "}
+                <span className="fl-unit-input">
+                  <input
+                    name="length"
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    max="1000"
+                    inputMode="decimal"
+                    placeholder="—"
+                  />
+                  <span>cm</span>
+                </span>
+              </label>
+              <label className="fl-measurement">
+                重量{" "}
+                <span className="fl-unit-input">
+                  <input
+                    name="weight"
+                    type="number"
+                    step="1"
+                    min="1"
+                    max="1000000"
+                    inputMode="decimal"
+                    placeholder="—"
+                  />
+                  <span>g</span>
+                </span>
+              </label>
+            </div>
+            <section className="fl-compact-section">
+              <h3>WHEN &amp; WHERE</h3>
               <div className="fl-form-grid">
                 <label>
                   日期
@@ -251,10 +302,31 @@ export default function AddCatch() {
                     })}
                   />
                 </label>
-                <label>
-                  時間
-                  <input name="time" type="time" />
-                </label>
+                <fieldset className="fl-period-field">
+                  <legend>時段</legend>
+                  <div className="fl-period-switch">
+                    {[
+                      { value: "morning", label: "早上", Icon: Sun },
+                      { value: "evening", label: "晚上", Icon: Moon },
+                    ].map(({ value, label, Icon }) => (
+                      <label key={value}>
+                        <input
+                          type="radio"
+                          name="period"
+                          value={value}
+                          checked={period === value}
+                          onChange={() =>
+                            setPeriod(value as "morning" | "evening")
+                          }
+                        />
+                        <span>
+                          <Icon size={14} />
+                          {label}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
                 <label className="fl-wide">
                   地點
                   <input
@@ -264,52 +336,64 @@ export default function AddCatch() {
                     placeholder="例如 Cheung Sha Wan"
                   />
                 </label>
-                <label>
-                  緯度（選填）
-                  <input
-                    name="latitude"
-                    type="number"
-                    step="any"
-                    min="-90"
-                    max="90"
-                    placeholder="22.332"
-                  />
-                </label>
-                <label>
-                  經度（選填）
-                  <input
-                    name="longitude"
-                    type="number"
-                    step="any"
-                    min="-180"
-                    max="180"
-                    placeholder="114.145"
-                  />
-                </label>
-                <label>
-                  長度 · cm
-                  <input
-                    name="length"
-                    type="number"
-                    step="0.1"
-                    min="0.1"
-                    max="1000"
-                  />
-                </label>
-                <label>
-                  重量 · g
-                  <input
-                    name="weight"
-                    type="number"
-                    step="1"
-                    min="1"
-                    max="1000000"
-                  />
-                </label>
               </div>
             </section>
-            <section className="fl-form-section">
-              <h2>03 / THE SETUP</h2>
+            <label className="fl-photo-picker">
+              <input
+                name="photo"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(event) => void choose(event.target.files?.[0])}
+              />
+              {preview ? (
+                <img src={preview} alt="待儲存的魚相" />
+              ) : (
+                <Camera size={22} />
+              )}
+              <span>
+                <b>{preview ? "更換魚相" : "加入魚相"}</b>
+                <small>
+                  {preparing
+                    ? "處理圖片中…"
+                    : photo
+                      ? `${(photo.size / 1024 / 1024).toFixed(2)} MB · 已準備上傳`
+                      : "相片會自動壓縮"}
+                </small>
+              </span>
+            </label>
+            {isNew && (
+              <details className="fl-optional-section">
+                <summary>Pixel Fish · 自行上載</summary>
+                <label className="fl-pixel-upload">
+                  透明 PNG
+                  <input
+                    name="pixel"
+                    type="file"
+                    accept="image/png"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (
+                        file &&
+                        (file.type !== "image/png" || file.size > 1024 * 1024)
+                      ) {
+                        setError("Pixel Fish 請使用 1 MB 以下透明 PNG");
+                        setPixel(null);
+                      } else {
+                        setPixel(file || null);
+                        setError("");
+                      }
+                    }}
+                  />
+                  <small>
+                    {config?.generationReady && !demo
+                      ? "留空會根據魚相生成。"
+                      : "請上載 1 MB 以下透明 PNG。"}
+                  </small>
+                </label>
+              </details>
+            )}
+            <details className="fl-optional-section">
+              <summary>Catch setup</summary>
               <div className="fl-form-grid">
                 {[
                   ["rod", "Rod"],
@@ -322,34 +406,40 @@ export default function AddCatch() {
                     <input name={name} maxLength={160} />
                   </label>
                 ))}
-                <label className="fl-wide">
-                  Notes
-                  <textarea
-                    name="note"
-                    maxLength={4000}
-                    placeholder="水色、潮汐、嗰一啖魚訊…"
-                  />
-                </label>
               </div>
-            </section>
+            </details>
+            <details className="fl-optional-section">
+              <summary>Notes</summary>
+              <label>
+                <span className="fl-sr-only">Notes</span>
+                <textarea
+                  name="note"
+                  maxLength={4000}
+                  placeholder="補充紀錄…"
+                />
+              </label>
+            </details>
           </fieldset>
-          {error && (
-            <p className="fl-error" role="alert">
-              {error}
-            </p>
-          )}
-          <div className="fl-save-row">
-            <p>
-              {isNew
-                ? "新魚種會解鎖一條 Pixel Fish。保存成功後先會加入 Aquarium。"
-                : "重用魚種嘅 Pixel Fish，唔會再生成或增加重複游魚。"}
-            </p>
-            <button className="fl-primary" disabled={busy}>
-              {busy ? "儲存中…" : "SAVE CATCH →"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </>
+        </div>
+        {error && (
+          <p className="fl-error" role="alert">
+            {error}
+          </p>
+        )}
+        <footer className="fl-dialog-footer">
+          <button
+            type="button"
+            className="fl-cancel"
+            disabled={busy || preparing}
+            onClick={dismiss}
+          >
+            取消
+          </button>
+          <button className="fl-primary" disabled={busy || preparing}>
+            {busy ? "儲存中…" : preparing ? "處理圖片中…" : "SAVE CATCH"}
+          </button>
+        </footer>
+      </form>
+    </dialog>
   );
 }

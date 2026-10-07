@@ -11,6 +11,7 @@ export type Catch = {
   speciesId: string;
   date: string;
   time?: string;
+  period?: "morning" | "evening";
   location: string;
   latitude?: number;
   longitude?: number;

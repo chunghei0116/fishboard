@@ -64,17 +64,24 @@ function reset() {
 }
 reset();
 afterEach(reset);
-function request({ newSpecies = false, photo = false } = {}) {
+function request({
+  newSpecies = false,
+  photo = false,
+  chineseName = "新魚",
+  englishName = "New fish",
+  period,
+} = {}) {
   const f = new FormData();
   f.set("requestId", "unique-request");
   f.set("speciesId", newSpecies ? "new" : "known");
   f.set("date", "2026-10-06");
   f.set("location", "Harbour");
   if (newSpecies) {
-    f.set("chineseName", "新魚");
-    f.set("englishName", "New fish");
+    f.set("chineseName", chineseName);
+    f.set("englishName", englishName);
     f.set("pixel", new File(["png"], "pixel.png", { type: "image/png" }));
   }
+  if (period) f.set("period", period);
   if (photo)
     f.set(
       "photo",
@@ -155,6 +162,46 @@ test("uncertain database commit preserves assets and records uncertain state", a
     globalThis.__v3.calls.some(
       (c) =>
         c[0] === "commit" && c[1].some((w) => w.value.status === "uncertain"),
+    ),
+  );
+});
+
+test("new species accepts a single name and catch keeps selected period", async () => {
+  assert.equal(
+    (
+      await route.POST(
+        request({
+          newSpecies: true,
+          chineseName: "",
+          englishName: "Seabream",
+          period: "evening",
+        }),
+      )
+    ).status,
+    201,
+  );
+  const writes = globalThis.__v3.calls
+    .filter((c) => c[0] === "commit")
+    .flatMap((c) => c[1]);
+  assert.equal(
+    writes.find((w) => w.col === "species").value.englishName,
+    "Seabream",
+  );
+  assert.equal(writes.find((w) => w.col === "species").value.chineseName, "");
+  assert.equal(writes.find((w) => w.col === "catches").value.period, "evening");
+});
+test("empty fish names reject before upload or generation", async () => {
+  assert.equal(
+    (
+      await route.POST(
+        request({ newSpecies: true, chineseName: " ", englishName: "" }),
+      )
+    ).status,
+    400,
+  );
+  assert.ok(
+    !globalThis.__v3.calls.some((c) =>
+      ["upload", "generate", "claim"].includes(c[0]),
     ),
   );
 });

@@ -2,7 +2,12 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { useFishLog } from "./provider";
-import { summarizeSpecies, sortCatches } from "@/lib/fish-log";
+import {
+  summarizeSpecies,
+  sortCatches,
+  speciesName,
+  catchTimeLabel,
+} from "@/lib/fish-log";
 import PixelFish from "./pixel-fish";
 import Aquarium from "./aquarium";
 import CatchLog, { CatchRows } from "./catch-log";
@@ -39,8 +44,10 @@ export function Collection() {
               {String(index + 1).padStart(2, "0")} / UNLOCKED
             </span>
             <PixelFish species={fish} />
-            <h2>{fish.chineseName}</h2>
-            <p>{fish.englishName.toUpperCase()}</p>
+            <h2>{speciesName(fish)}</h2>
+            {fish.chineseName && fish.englishName && (
+              <p>{fish.englishName.toUpperCase()}</p>
+            )}
             <div>
               <span>{fish.totalCaught} CATCHES</span>
               <span>BEST {fish.bestLength ?? "—"} cm</span>
@@ -73,8 +80,10 @@ export function SpeciesDetail({ id }: { id: string }) {
           <PixelFish species={fish} />
         </div>
         <div>
-          <h1>{fish.chineseName}</h1>
-          <p className="fl-latin">{fish.englishName.toUpperCase()}</p>
+          <h1>{speciesName(fish)}</h1>
+          {fish.chineseName && fish.englishName && (
+            <p className="fl-latin">{fish.englishName.toUpperCase()}</p>
+          )}
           <p className="fl-scientific">{fish.scientificName || "學名未記錄"}</p>
           <div className="fl-stats">
             <div>
@@ -113,7 +122,7 @@ export function CatchDetail({ id }: { id: string }) {
   if (!record || !fish) return <Missing />;
   const fields = [
     ["DATE", record.date],
-    ["TIME", record.time],
+    ["TIME", catchTimeLabel(record)],
     ["LOCATION", record.location],
     ["LENGTH", record.length ? `${record.length} cm` : undefined],
     ["WEIGHT", record.weight ? `${record.weight} g` : undefined],
@@ -128,9 +137,12 @@ export function CatchDetail({ id }: { id: string }) {
         <ArrowLeft size={15} /> BACK TO CATCH LOG
       </Link>
       <div className="fl-detail-heading">
-        <h1>{fish.chineseName}</h1>
+        <h1>{speciesName(fish)}</h1>
         <Link href={`/species/${fish.id}`}>
-          {fish.englishName.toUpperCase()} <ArrowUpRight size={14} />
+          {fish.chineseName && fish.englishName
+            ? fish.englishName.toUpperCase()
+            : "SPECIES"}{" "}
+          <ArrowUpRight size={14} />
         </Link>
       </div>
       <div className="fl-catch-detail">
@@ -140,7 +152,7 @@ export function CatchDetail({ id }: { id: string }) {
           </div>
           <figure className="fl-original">
             {record.photo ? (
-              <img src={record.photo} alt={`${fish.chineseName}原始魚相`} />
+              <img src={record.photo} alt={`${speciesName(fish)}原始魚相`} />
             ) : (
               <div>未提供原始魚相</div>
             )}
