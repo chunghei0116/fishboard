@@ -9,7 +9,7 @@ import {
   speciesName,
 } from "@/lib/fish-log";
 import { preparePhoto } from "@/lib/photo-upload";
-import type { Catch, Dataset, Species } from "@/data/types";
+import type { Catch, Dataset } from "@/data/types";
 function dataURL(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -44,7 +44,6 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
   const router = useRouter();
   const [speciesId, setSpeciesId] = useState(data.species[0]?.id || "new"),
     [photo, setPhoto] = useState<File | null>(null),
-    [pixel, setPixel] = useState<File | null>(null),
     [preview, setPreview] = useState(""),
     [busy, setBusy] = useState(false),
     [preparing, setPreparing] = useState(false),
@@ -55,6 +54,10 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
   const isNew = speciesId === "new";
   const dialog = useRef<HTMLDialogElement>(null);
   const photoSelection = useRef(0);
+  const savingStatus = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (busy) savingStatus.current?.focus({ preventScroll: true });
+  }, [busy]);
   useEffect(() => {
     const element = dialog.current;
     const selection = photoSelection;
@@ -125,32 +128,14 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
       }
       const input = validateCatch(raw);
       if (demo) {
-        let species: Species | undefined;
-        if (isNew) {
-          const { chineseName, englishName } = validateSpeciesNames({
-            chineseName: form.get("chineseName"),
-            englishName: form.get("englishName"),
-          });
-          if (!pixel)
-            throw Error(
-              "示範模式新增魚種需要上載透明 PNG 像素魚；AI 生圖需要私人帳戶。",
-            );
-          species = {
-            id: nextSpeciesId,
-            chineseName,
-            englishName,
-            scientificName:
-              String(form.get("scientificName") || "") || undefined,
-            pixelImage: await dataURL(pixel),
-          };
-        }
+        if (isNew) throw Error("新增魚種需要登入並使用生圖服務。");
         const record: Catch = {
           ...input,
           id,
           photo: photo ? await dataURL(photo) : undefined,
         };
         const next: Dataset = {
-          species: species ? [...data.species, species] : data.species,
+          species: data.species,
           catches: [...data.catches, record],
         };
         saveDemo(next);
@@ -158,19 +143,20 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
         return;
       }
       if (!user) throw Error("請先登入私人帳戶");
-      if (isNew)
+      if (isNew) {
+        if (!photo) throw Error("新魚種需要魚相，請先加入魚相。");
+        if (!config?.generationReady)
+          throw Error("像素魚生成暫時未能使用，請稍後再試。");
         validateSpeciesNames({
           chineseName: form.get("chineseName"),
           englishName: form.get("englishName"),
         });
+      }
       form.set("speciesId", speciesId);
       form.set("requestId", id);
       if (photo) form.set("photo", photo);
       else form.delete("photo");
-      if (pixel) form.set("pixel", pixel);
-      else form.delete("pixel");
-      if (isNew && !pixel && photo)
-        form.set("reference", await aiReference(photo));
+      if (isNew && photo) form.set("reference", await aiReference(photo));
       const r = await fetch("/api/fishlog", { method: "POST", body: form });
       const response = (await r.json()) as { id: string; error?: string };
       if (!r.ok) throw Error(response.error || "未能儲存，請再試");
@@ -211,6 +197,8 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
       </header>
       <form
         className="fl-form"
+        aria-busy={busy}
+        inert={busy}
         onSubmit={(event) => void save(event)}
         onChange={() => {
           if (!busy) request.current = null;
@@ -341,6 +329,7 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
             <label className="fl-photo-picker">
               <input
                 name="photo"
+                required={isNew}
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 onChange={(event) => void choose(event.target.files?.[0])}
@@ -361,37 +350,6 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
                 </small>
               </span>
             </label>
-            {isNew && (
-              <details className="fl-optional-section">
-                <summary>Pixel Fish · 自行上載</summary>
-                <label className="fl-pixel-upload">
-                  透明 PNG
-                  <input
-                    name="pixel"
-                    type="file"
-                    accept="image/png"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (
-                        file &&
-                        (file.type !== "image/png" || file.size > 1024 * 1024)
-                      ) {
-                        setError("Pixel Fish 請使用 1 MB 以下透明 PNG");
-                        setPixel(null);
-                      } else {
-                        setPixel(file || null);
-                        setError("");
-                      }
-                    }}
-                  />
-                  <small>
-                    {config?.generationReady && !demo
-                      ? "留空會根據魚相生成。"
-                      : "請上載 1 MB 以下透明 PNG。"}
-                  </small>
-                </label>
-              </details>
-            )}
             <details className="fl-optional-section">
               <summary>Catch setup</summary>
               <div className="fl-form-grid">
@@ -440,6 +398,45 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
           </button>
         </footer>
       </form>
+      {busy && (
+        <div className="fl-save-overlay">
+          <div
+            className="fl-save-popup"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            tabIndex={-1}
+            ref={savingStatus}
+          >
+            <div className="fl-saving-water" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+              <svg
+                className="fl-saving-fish"
+                viewBox="0 0 120 64"
+                shapeRendering="crispEdges"
+              >
+                <path
+                  d="M24 24H36V16H52V12H76V16H92V24H104V40H92V48H76V52H52V48H36V40H24L8 52V12Z"
+                  fill="#278de5"
+                />
+                <path d="M40 36H92V44H76V48H52V44H40Z" fill="#badcef" />
+                <path d="M52 12V4H76V12M52 52V60H76V52" fill="#e5c574" />
+                <path d="M72 28H84V40H72Z" fill="#1673bc" />
+                <rect x="88" y="24" width="8" height="8" fill="#191919" />
+                <rect x="88" y="24" width="3" height="3" fill="#fcfbf8" />
+              </svg>
+            </div>
+            <h3>{isNew ? "魚仔準備游入水箱…" : "記低今次漁獲…"}</h3>
+            <p>
+              {isNew
+                ? "正在生成像素魚及儲存紀錄，請稍候。"
+                : "魚相同紀錄儲存中，請稍候。"}
+            </p>
+          </div>
+        </div>
+      )}
     </dialog>
   );
 }

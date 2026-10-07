@@ -79,6 +79,10 @@ Vercel production deployment of commit `a6d086c` reached READY and served `fishb
 
 ## Compact catch sheet
 
-The homepage opens Add Catch in a native modal dialog; below 600px it becomes a bottom sheet. The header and actions remain visible while the fields scroll. New species require at least one Chinese or English name. Length and weight precede date, morning/evening and location. Precise legacy times remain visible; new periods do not invent a clock time. Gear, Notes and manual pixel upload are collapsible. Scientific name and raw coordinates remain compatible with old data but are omitted from this simplified form.
+The homepage opens Add Catch in a native modal dialog; below 600px it becomes a bottom sheet. The header and actions remain visible while the fields scroll. New species require at least one Chinese or English name. Length and weight precede date, morning/evening and location. Precise legacy times remain visible; new periods do not invent a clock time. Gear and Notes are collapsible. Manual pixel upload is omitted from Add Catch; new species require a photo and use AI automatically. Scientific name and raw coordinates remain compatible with old data but are omitted from this simplified form.
 
 Chrome verification compressed an 18.7 MiB PNG to a 0.95 MiB JPEG at 2560px, then saved a private catch with only its English name, evening period, length and weight. Both stored images loaded successfully. Only explicitly marked temporary verification records and assets are removed. Chrome also rendered the bottom sheet in a 390px viewport with fixed header/actions and a scrolling form.
+
+## Mobile fields and save feedback
+
+Below 600px every input uses one full-width grid column, including date and period. Date inputs explicitly reset browser intrinsic sizing; measurement units and photo previews cannot force their parent wider. Chrome checks at 320px and 390px covered names, measurements, date, periods, location and expanded gear inputs. Save displays an accessible pixel fish status popup, prevents repeated submission and dismissal during the operation, and respects reduced motion. A real temporary existing-species catch with photo was saved and cleaned up without removing the shared species or personal records.
