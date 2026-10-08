@@ -57,6 +57,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
               <Link
                 key={href}
                 href={href}
+                aria-label={label}
                 aria-current={path === href ? "page" : undefined}
               >
                 <Icon size={18} />

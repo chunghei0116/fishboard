@@ -11,6 +11,8 @@
   --fl-glass-hover: rgba(255, 255, 255, 0.55);
   --fl-glass-active: rgba(255, 255, 255, 0.85);
   --fl-mono: "IBM Plex Mono", monospace;
+  --fl-nav-bottom: max(22px, env(safe-area-inset-bottom, 0px));
+  --fl-nav-dock-offset: 76px;
 }
 body {
   margin: 0;
@@ -1132,7 +1134,7 @@ body {
 .fl-bottom-nav {
   position: fixed;
   left: 50%;
-  bottom: max(22px, env(safe-area-inset-bottom));
+  bottom: var(--fl-nav-bottom);
   transform: translateX(-50%);
   z-index: 1100;
   display: flex;
@@ -1319,20 +1321,20 @@ body {
     padding-right: 0;
   }
   .fl-bottom-nav {
-    bottom: max(16px, env(safe-area-inset-bottom));
-    padding: 6px;
+    padding: 4px;
     width: min(360px, calc(100% - 32px));
     justify-content: space-between;
   }
   .fl-bottom-nav a {
-    gap: 6px;
-    padding: 13px 12px;
+    gap: 0;
+    padding: 0;
+    min-height: 44px;
     flex: 1;
     font-size: 9px;
   }
   .fl-bottom-nav a svg {
-    width: 16px;
-    height: 16px;
+    width: 21px;
+    height: 21px;
   }
   .fl-log-heading h1 {
     font-size: 20px;
@@ -2459,7 +2461,7 @@ path.fl-rig-piece.is-active {
 .fl-gear-save-dock {
   position: fixed;
   left: 50%;
-  bottom: calc(max(22px, env(safe-area-inset-bottom)) + 76px);
+  bottom: calc(var(--fl-nav-bottom) + var(--fl-nav-dock-offset));
   transform: translateX(-50%);
   z-index: 1101;
   display: flex;
@@ -2584,7 +2586,6 @@ path.fl-rig-piece.is-active {
 }
 @media (max-width: 650px) {
   .fl-gear-save-dock {
-    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 76px);
     gap: 12px;
     padding-left: 16px;
   }
@@ -2696,10 +2697,7 @@ path.fl-rig-piece.is-active {
 }
 @media (max-width: 650px) {
   .fl-bottom-nav a {
-    flex-direction: column;
-    gap: 5px;
-    padding: 9px 6px;
-    font-size: 8px;
+    flex-direction: row;
   }
   .fl-theme-toggle {
     width: 36px;
@@ -2735,8 +2733,15 @@ path.fl-rig-piece.is-active {
   letter-spacing: 0.02em;
 }
 @media (max-width: 650px) {
-  .fl-bottom-nav a {
-    font-size: 11px;
+  :root {
+    --fl-nav-bottom: max(6px, env(safe-area-inset-bottom, 0px));
+    --fl-nav-dock-offset: 62px;
+  }
+  .fl-bottom-nav a span {
+    display: none;
+  }
+  .fl-shell {
+    padding-bottom: calc(85px + env(safe-area-inset-bottom, 0px));
   }
   .fl-brand small {
     font-size: 9px;
