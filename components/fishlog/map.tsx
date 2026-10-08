@@ -1,14 +1,17 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import type { Map as LeafletMap } from "leaflet";
+import type { Map as JournalMap, StyleSpecification } from "maplibre-gl";
+import { useTheme } from "next-themes";
+import { journalMapStyle } from "@/lib/map-style";
 import { useFishLog } from "./provider";
 import { CatchRows } from "./catch-log";
 import { sortCatches } from "@/lib/fish-log";
-import "leaflet/dist/leaflet.css";
+import "maplibre-gl/dist/maplibre-gl.css";
 export default function CatchMap() {
   const { data } = useFishLog();
+  const { resolvedTheme } = useTheme();
   const host = useRef<HTMLDivElement>(null),
-    map = useRef<LeafletMap | null>(null);
+    map = useRef<JournalMap | null>(null);
   const [selected, setSelected] = useState(""),
     [error, setError] = useState("");
   const locations = [
@@ -20,19 +23,34 @@ export default function CatchMap() {
   ];
   useEffect(() => {
     let disposed = false;
+    const abort = new AbortController();
     async function initialize() {
       try {
-        const L = await import("leaflet");
+        setError("");
+        const [M, response] = await Promise.all([
+          import("maplibre-gl"),
+          fetch("https://tiles.openfreemap.org/styles/positron", {
+            signal: abort.signal,
+          }),
+        ]);
+        if (!response.ok) throw Error("Map unavailable");
+        const style = (await response.json()) as StyleSpecification;
         if (disposed || !host.current) return;
-        const instance = L.map(host.current, {
-          scrollWheelZoom: false,
-        }).setView([22.305, 114.195], 11);
+        M.setWorkerUrl(new URL("maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).toString());
+        const instance = new M.Map({
+          container: host.current,
+          style: journalMapStyle(style, resolvedTheme === "dark"),
+          center: [114.195, 22.305],
+          zoom: 11,
+          scrollZoom: false,
+          dragRotate: false,
+        });
         map.current = instance;
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution:
-            '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-          maxZoom: 19,
-        }).addTo(instance);
+        instance.touchZoomRotate.disableRotation();
+        instance.addControl(
+          new M.NavigationControl({ showCompass: false }),
+          "top-right",
+        );
         const records = data.catches.filter(
           (c) => c.latitude !== undefined && c.longitude !== undefined,
         );
@@ -43,23 +61,25 @@ export default function CatchMap() {
         }
         for (const records of points.values()) {
           const c = records[0];
-          const marker = L.circleMarker([c.latitude!, c.longitude!], {
-            radius: 8,
-            color: "#278de5",
-            fillColor: "#fcfbf8",
-            fillOpacity: 1,
-            weight: 2,
-          }).addTo(instance);
-          const text = document.createElement("span");
-          text.textContent = `${c.location} · ${records.length} catches`;
-          marker.bindTooltip(text);
-          marker.on("click", () => setSelected(c.location));
-        }
-        if (records.length)
-          instance.fitBounds(
-            L.latLngBounds(records.map((c) => [c.latitude!, c.longitude!])),
-            { padding: [35, 35], maxZoom: 13 },
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "fl-map-marker";
+          button.textContent = String(records.length);
+          button.setAttribute(
+            "aria-label",
+            `${c.location} · ${records.length} catches`,
           );
+          button.title = `${c.location} · ${records.length} catches`;
+          button.addEventListener("click", () => setSelected(c.location));
+          new M.Marker({ element: button })
+            .setLngLat([c.longitude!, c.latitude!])
+            .addTo(instance);
+        }
+        if (records.length) {
+          const bounds = new M.LngLatBounds();
+          records.forEach((c) => bounds.extend([c.longitude!, c.latitude!]));
+          instance.fitBounds(bounds, { padding: 35, maxZoom: 13, duration: 0 });
+        }
       } catch {
         if (!disposed) setError("地圖未能載入；地點紀錄仍可在下面查看。");
       }
@@ -67,19 +87,23 @@ export default function CatchMap() {
     void initialize();
     return () => {
       disposed = true;
+      abort.abort();
       map.current?.remove();
       map.current = null;
     };
-  }, [data.catches]);
+  }, [data.catches, resolvedTheme]);
   const records = sortCatches(
     data.catches.filter((c) => !selected || c.location === selected),
   );
   function choose(location: string) {
     setSelected(location);
     const record = data.catches.find(
-      (c) => c.location === location && c.latitude !== undefined,
+      (c) =>
+        c.location === location &&
+        c.latitude !== undefined &&
+        c.longitude !== undefined,
     );
-    if (record) map.current?.panTo([record.latitude!, record.longitude!]);
+    if (record) map.current?.panTo([record.longitude!, record.latitude!]);
   }
   return (
     <>
@@ -90,10 +114,7 @@ export default function CatchMap() {
       <div className="fl-map-layout">
         <div>
           <div ref={host} className="fl-map" aria-label="釣獲地點地圖" />
-          <p className="fl-map-note">
-            OPENSTREETMAP · 點擊藍色地點查看紀錄。未有座標的紀錄仍保留於 Catch
-            Log。
-          </p>
+          <p className="fl-map-note">點擊藍色地點查看紀錄。</p>
         </div>
         <div className="fl-location-list">
           <button

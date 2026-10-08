@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./fishlog.css";
 import { FishLogProvider } from "@/components/fishlog/provider";
+import { JournalTheme } from "@/components/fishlog/theme";
 import Shell from "@/components/fishlog/shell";
 export const metadata: Metadata = {
   title: "FISH LOG · My waters, my catches.",
@@ -15,11 +16,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="zh-HK">
+    <html lang="zh-HK" suppressHydrationWarning>
       <body>
-        <FishLogProvider>
-          <Shell>{children}</Shell>
-        </FishLogProvider>
+        <JournalTheme>
+          <FishLogProvider>
+            <Shell>{children}</Shell>
+          </FishLogProvider>
+        </JournalTheme>
       </body>
     </html>
   );

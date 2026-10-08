@@ -24,14 +24,17 @@ const security = url(
 const validation = url(
   await readFile(new URL("../lib/fish-log.ts", import.meta.url), "utf8"),
 );
+const gearValidation = url(
+  await readFile(new URL("../lib/gear.ts", import.meta.url), "utf8"),
+);
 const auth = url(
   `import {FishlogError} from '${env}';export async function privateUser(){if(!globalThis.__v3.uid)throw new FishlogError('login',401);return {uid:globalThis.__v3.uid}};export function mutationOrigin(r){if(r.headers.get('origin')!=='https://fish.test')throw new FishlogError('origin',403)}`,
 );
 const db = url(
-  `export async function listDocuments(uid,col){globalThis.__v3.calls.push(['list',uid,col]);return []};export async function getDocument(uid,col,id){globalThis.__v3.calls.push(['get',uid,col,id]);return globalThis.__v3.documents[col+'/'+id]||null};export async function claimRequest(uid,id){globalThis.__v3.calls.push(['claim',uid,id]);return globalThis.__v3.previous};export function write(uid,col,id,value){return {uid,col,id,value}};export async function commit(writes){globalThis.__v3.calls.push(['commit',writes]);if(globalThis.__v3.failCommit&&writes.some(w=>w.col==='catches'))throw Error('ambiguous commit');return {}}`,
+  `export async function listDocuments(uid,col){globalThis.__v3.calls.push(['list',uid,col]);return []};export async function getDocument(uid,col,id){globalThis.__v3.calls.push(['get',uid,col,id]);return globalThis.__v3.documents[col+'/'+id]||null};export async function claimRequest(uid,id){globalThis.__v3.calls.push(['claim',uid,id]);return globalThis.__v3.previous};export function documentPath(uid,col,id){return 'users/'+uid+'/'+col+'/'+id};export function write(uid,col,id,value){return {uid,col,id,value}};export async function commit(writes){globalThis.__v3.calls.push(['commit',writes]);if(globalThis.__v3.failCommit&&writes.some(w=>w.col==='catches'||w.delete))throw Error('ambiguous commit');return {}}`,
 );
 const storage = url(
-  `export function cloudinaryConfigured(){return true};export async function uploadImage(env,file,id){globalThis.__v3.calls.push(['upload',id]);if(globalThis.__v3.failBadge&&id.endsWith('/badge'))throw Error('upload');return 'cloudinary:test/'+id+'.png'};export async function removeImage(env,ref){globalThis.__v3.calls.push(['remove',ref])};export async function readImage(){globalThis.__v3.calls.push(['read']);return new Response('image',{headers:{'content-type':'image/png'}})}`,
+  `export function cloudinaryConfigured(){return true};export async function uploadImage(env,file,id){globalThis.__v3.calls.push(['upload',id]);if(globalThis.__v3.failBadge&&id.endsWith('/badge'))throw Error('upload');return 'cloudinary:test/'+id+'.png'};export async function removeImage(env,ref){globalThis.__v3.calls.push(['remove',ref]);if(globalThis.__v3.failRemove)throw Error('cleanup')};export async function readImage(){globalThis.__v3.calls.push(['read']);return new Response('image',{headers:{'content-type':'image/png'}})}`,
 );
 const generation = url(
   `export function pngFile(){};export async function generateFish(){globalThis.__v3.calls.push(['generate']);return {image:new Blob(['fish'],{type:'image/png'}),model:'model'}}`,
@@ -44,6 +47,7 @@ const replacements = {
   "@/lib/fishlog-security": security,
   "@/lib/fish-generation": generation,
   "@/lib/fish-log": validation,
+  "@/lib/gear": gearValidation,
 };
 async function load(path) {
   let src = await readFile(new URL(path, import.meta.url), "utf8");
@@ -51,6 +55,8 @@ async function load(path) {
     src = src.replaceAll(key, value);
   return import(url(src));
 }
+const deletion = await load("../app/api/fishlog/catches/[id]/route.ts"),
+  gear = await load("../app/api/gear/route.ts");
 const route = await load("../app/api/fishlog/route.ts"),
   media = await load("../app/api/media/[id]/route.ts");
 function reset() {
@@ -204,4 +210,179 @@ test("empty fish names reject before upload or generation", async () => {
       ["upload", "generate", "claim"].includes(c[0]),
     ),
   );
+});
+function deleteRequest(origin = "https://fish.test") {
+  return new Request("https://fish.test/api/fishlog/catches/own", {
+    method: "DELETE",
+    headers: { origin },
+  });
+}
+const deleteParams = { params: Promise.resolve({ id: "own" }) };
+function ownCatch() {
+  globalThis.__v3.documents["catches/own"] = {
+    value: { id: "own", speciesId: "known", photo: "cloudinary:test/own.png" },
+    updateTime: "revision-1",
+  };
+}
+test("delete requires login and same origin, and does not access storage", async () => {
+  globalThis.__v3.uid = null;
+  assert.equal(
+    (await deletion.DELETE(deleteRequest(), deleteParams)).status,
+    401,
+  );
+  globalThis.__v3.uid = "owner-a";
+  assert.equal(
+    (await deletion.DELETE(deleteRequest("https://other.test"), deleteParams))
+      .status,
+    403,
+  );
+  assert.equal(globalThis.__v3.calls.length, 0);
+});
+test("delete cannot discover or delete another user's catch", async () => {
+  assert.equal(
+    (await deletion.DELETE(deleteRequest(), deleteParams)).status,
+    404,
+  );
+  assert.ok(
+    globalThis.__v3.calls.every((c) => c[0] === "get" && c[1] === "owner-a"),
+  );
+});
+test("delete atomically removes owned catch with revision guard and keeps shared species", async () => {
+  ownCatch();
+  const response = await deletion.DELETE(deleteRequest(), deleteParams);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), {
+    deleted: true,
+    cleanupPending: false,
+  });
+  const writes = globalThis.__v3.calls
+    .filter((c) => c[0] === "commit")
+    .flatMap((c) => c[1]);
+  assert.deepEqual(writes[0], {
+    delete: "users/owner-a/catches/own",
+    currentDocument: { updateTime: "revision-1" },
+  });
+  assert.ok(!writes.some((w) => w.col === "species"));
+  assert.equal(writes.at(-1).value.status, "deleted");
+  assert.deepEqual(
+    globalThis.__v3.calls.find((c) => c[0] === "remove"),
+    ["remove", "cloudinary:test/own.png"],
+  );
+});
+test("failed delete commit retains the original photo", async () => {
+  ownCatch();
+  globalThis.__v3.failCommit = true;
+  assert.equal(
+    (await deletion.DELETE(deleteRequest(), deleteParams)).status,
+    503,
+  );
+  assert.ok(!globalThis.__v3.calls.some((c) => c[0] === "remove"));
+});
+test("photo cleanup failure retains a retryable tombstone and duplicate delete retries safely", async () => {
+  ownCatch();
+  globalThis.__v3.failRemove = true;
+  const response = await deletion.DELETE(deleteRequest(), deleteParams);
+  assert.equal((await response.json()).cleanupPending, true);
+  const tombstone = globalThis.__v3.calls
+    .filter((c) => c[0] === "commit")
+    .at(-1)[1][0].value;
+  delete globalThis.__v3.documents["catches/own"];
+  globalThis.__v3.documents["requests/own"] = { value: tombstone };
+  globalThis.__v3.failRemove = false;
+  globalThis.__v3.calls = [];
+  const replay = await deletion.DELETE(deleteRequest(), deleteParams);
+  assert.deepEqual(await replay.json(), {
+    deleted: true,
+    cleanupPending: false,
+  });
+  assert.ok(
+    !globalThis.__v3.calls
+      .filter((c) => c[0] === "commit")
+      .flatMap((c) => c[1])
+      .some((w) => w.delete),
+  );
+});
+function gearRequest(profile, origin = "https://fish.test") {
+  return new Request("https://fish.test/api/gear", {
+    method: "PUT",
+    headers: { origin, "content-type": "application/json" },
+    body: JSON.stringify(profile),
+  });
+}
+test("gear saves only validated equipment under the authenticated profile", async () => {
+  assert.equal(
+    (
+      await gear.PUT(
+        gearRequest({
+          name: " Shore kit ",
+          rod: "Light rod",
+          mainLine: "PE 0.8",
+          leaderLine: "8 lb",
+          uid: "other",
+        }),
+      )
+    ).status,
+    200,
+  );
+  assert.deepEqual(globalThis.__v3.calls[0][1][0], {
+    uid: "owner-a",
+    col: "profiles",
+    id: "gear",
+    value: {
+      name: "Shore kit",
+      rod: "Light rod",
+      mainLine: "PE 0.8",
+      leaderLine: "8 lb",
+    },
+  });
+});
+test("gear rejects anonymous, cross-origin and invalid data before writes", async () => {
+  globalThis.__v3.uid = null;
+  assert.equal((await gear.PUT(gearRequest({ name: "Kit" }))).status, 401);
+  globalThis.__v3.uid = "owner-a";
+  assert.equal(
+    (await gear.PUT(gearRequest({ name: "Kit" }, "https://other.test"))).status,
+    403,
+  );
+  assert.equal((await gear.PUT(gearRequest({ name: " " }))).status, 400);
+  assert.equal(
+    (await gear.PUT(gearRequest({ name: "Kit", rod: 5 }))).status,
+    400,
+  );
+  assert.equal(
+    (await gear.PUT(gearRequest({ name: "Kit", lure: "x".repeat(4100) })))
+      .status,
+    413,
+  );
+  assert.equal(globalThis.__v3.calls.length, 0);
+});
+test("dataset includes the personal loadout", async () => {
+  globalThis.__v3.documents["profiles/gear"] = {
+    value: { name: "Shore", mainLine: "PE 1" },
+  };
+  assert.deepEqual((await (await route.GET()).json()).gear, {
+    name: "Shore",
+    mainLine: "PE 1",
+  });
+});
+test("catch stores main line, leader and loadout name as a historical snapshot", async () => {
+  const source = request(),
+    form = await source.formData();
+  form.set("line", "PE 0.8");
+  form.set("leaderLine", "8 lb");
+  form.set("gearName", "Shore");
+  const response = await route.POST(
+    new Request(source.url, {
+      method: "POST",
+      headers: { origin: "https://fish.test" },
+      body: form,
+    }),
+  );
+  assert.equal(response.status, 201);
+  const record = globalThis.__v3.calls
+    .find((c) => c[0] === "commit")[1]
+    .find((w) => w.col === "catches").value;
+  assert.equal(record.line, "PE 0.8");
+  assert.equal(record.leaderLine, "8 lb");
+  assert.equal(record.gearName, "Shore");
 });

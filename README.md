@@ -46,6 +46,8 @@ Cloudinary uploads use the authenticated delivery type with overwrite disabled. 
 
 ## FISH LOG v0.3 journal
 
-The current homepage follows the FISH LOG reference: a quiet off-white pixel aquarium, date timeline, species collection, detail pages and mapped catch locations. Open `/add` for a catch record and `/settings` for private login, connection status and JSON export. Without Firebase configuration the journal is clearly labeled as a browser-local demo. Species and catches are separate; repeated catches share one aquarium fish.
+The journal uses a cool white and pale-gray palette, with a persistent dark theme toggled by the small light beside FISH LOG. A floating glass navigation bar links Home, Collection, Map and Gear. The Map uses OpenFreeMap vector tiles with blue water and gray land in both themes. Catch detail previews original photos at a cropped 16:9 ratio; opening the image shows the full original. Deleting a catch requires confirmation, removes its private original photo, and recalculates the aquarium and statistics while preserving shared species sprites.
+
+The Gear page stores a private loadout containing Rod, Reel, Main Line, Leader Line and Lure/Bait. Apply it in the Add Catch sheet to save a snapshot with that catch; subsequent loadout edits do not change past records. Signed-out visitors see the seaside Google login screen. Species and catches are separate; repeated catches share one aquarium fish.
 
 The new backend uses Firebase Auth / Firestore, Cloudinary and Cloudflare Workers AI. The older OpenAI/D1 collection described above is preserved as legacy code and is no longer the homepage. See [setup and validation](docs/service-setup.md) for the new configuration, standalone Worker deployment and the boundary between local tests and unverified live services. No account migration or deployment has been performed.

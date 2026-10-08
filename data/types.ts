@@ -23,6 +23,8 @@ export type Catch = {
   rod?: string;
   reel?: string;
   line?: string;
+  leaderLine?: string;
+  gearName?: string;
   lure?: string;
   note?: string;
   created?: string;
@@ -32,4 +34,16 @@ export type SpeciesSummary = Species & {
   bestLength?: number;
   firstCaughtDate?: string;
 };
-export type Dataset = { species: Species[]; catches: Catch[] };
+export type GearProfile = {
+  name: string;
+  rod?: string;
+  reel?: string;
+  mainLine?: string;
+  leaderLine?: string;
+  lure?: string;
+};
+export type Dataset = {
+  species: Species[];
+  catches: Catch[];
+  gear?: GearProfile;
+};

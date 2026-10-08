@@ -10,6 +10,7 @@ import {
 } from "@/lib/fish-log";
 import PixelFish from "./pixel-fish";
 import Aquarium from "./aquarium";
+import DeleteCatch from "./delete-catch";
 import CatchLog, { CatchRows } from "./catch-log";
 export function Home() {
   const { data, loading } = useFishLog();
@@ -128,7 +129,8 @@ export function CatchDetail({ id }: { id: string }) {
     ["WEIGHT", record.weight ? `${record.weight} g` : undefined],
     ["ROD", record.rod],
     ["REEL", record.reel],
-    ["LINE", record.line],
+    ["MAIN LINE", record.line],
+    ["LEADER LINE", record.leaderLine],
     ["LURE / BAIT", record.lure],
   ];
   return (
@@ -152,7 +154,14 @@ export function CatchDetail({ id }: { id: string }) {
           </div>
           <figure className="fl-original">
             {record.photo ? (
-              <img src={record.photo} alt={`${speciesName(fish)}原始魚相`} />
+              <a
+                href={record.photo}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="查看完整原相"
+              >
+                <img src={record.photo} alt={`${speciesName(fish)}原始魚相`} />
+              </a>
             ) : (
               <div>未提供原始魚相</div>
             )}
@@ -174,6 +183,7 @@ export function CatchDetail({ id }: { id: string }) {
           </section>
         </div>
       </div>
+      <DeleteCatch id={record.id} name={speciesName(fish)} />
     </>
   );
 }

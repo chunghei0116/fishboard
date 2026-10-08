@@ -100,6 +100,8 @@ export function validateCatch(
     rod: string("rod", 160),
     reel: string("reel", 160),
     line: string("line", 160),
+    leaderLine: string("leaderLine", 160),
+    gearName: string("gearName", 80),
     lure: string("lure", 160),
     note: string("note", 4000),
   };

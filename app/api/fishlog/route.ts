@@ -1,4 +1,4 @@
-import type { Catch, Species } from "@/data/types";
+import type { Catch, Species, GearProfile } from "@/data/types";
 import { validateCatch, validateSpeciesNames } from "@/lib/fish-log";
 import { privateUser, mutationOrigin } from "@/lib/firebase-auth";
 import {
@@ -22,8 +22,9 @@ import {
   removeImage,
 } from "@/lib/cloudinary";
 import { generateFish, pngFile } from "@/lib/fish-generation";
-function publicData(catches: Catch[], species: Species[]) {
+function publicData(catches: Catch[], species: Species[], gear?: GearProfile) {
   return {
+    gear,
     catches: catches.map((c) => ({
       ...c,
       photo: c.photo ? `/api/media/${c.id}?kind=photo` : undefined,
@@ -37,13 +38,21 @@ function publicData(catches: Catch[], species: Species[]) {
 export async function GET() {
   try {
     const { uid } = await privateUser();
-    const [catches, species] = await Promise.all([
+    const [catches, species, gear] = await Promise.all([
       listDocuments(uid, "catches"),
       listDocuments(uid, "species"),
+      getDocument(uid, "profiles", "gear"),
     ]);
-    return Response.json(publicData(catches as Catch[], species as Species[]), {
-      headers: { "Cache-Control": "no-store" },
-    });
+    return Response.json(
+      publicData(
+        catches as Catch[],
+        species as Species[],
+        gear?.value as GearProfile | undefined,
+      ),
+      {
+        headers: { "Cache-Control": "no-store" },
+      },
+    );
   } catch (e) {
     return fail(e);
   }
@@ -103,6 +112,8 @@ export async function POST(request: Request) {
       "rod",
       "reel",
       "line",
+      "leaderLine",
+      "gearName",
       "lure",
       "note",
     ])

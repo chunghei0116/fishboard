@@ -49,6 +49,14 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
     [preparing, setPreparing] = useState(false),
     [period, setPeriod] = useState<"morning" | "evening" | "">(""),
     [error, setError] = useState("");
+  const [setup, setSetup] = useState({
+    rod: "",
+    reel: "",
+    line: "",
+    leaderLine: "",
+    lure: "",
+  });
+  const [gearName, setGearName] = useState("");
   const request = useRef<string | null>(null);
   const submitting = useRef(false);
   const isNew = speciesId === "new";
@@ -117,10 +125,13 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
         "rod",
         "reel",
         "line",
+        "leaderLine",
         "lure",
         "note",
       ])
         raw[key] = form.get(key) || undefined;
+      raw.gearName = gearName || undefined;
+      form.set("gearName", gearName);
       raw.speciesId = nextSpeciesId;
       for (const key of ["length", "weight", "latitude", "longitude"]) {
         const value = form.get(key);
@@ -135,6 +146,7 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
           photo: photo ? await dataURL(photo) : undefined,
         };
         const next: Dataset = {
+          ...data,
           species: data.species,
           catches: [...data.catches, record],
         };
@@ -352,16 +364,46 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
             </label>
             <details className="fl-optional-section">
               <summary>Catch setup</summary>
+              {data.gear && (
+                <button
+                  type="button"
+                  className="fl-apply-gear"
+                  onClick={() => {
+                    setSetup({
+                      rod: data.gear?.rod || "",
+                      reel: data.gear?.reel || "",
+                      line: data.gear?.mainLine || "",
+                      leaderLine: data.gear?.leaderLine || "",
+                      lure: data.gear?.lure || "",
+                    });
+                    setGearName(data.gear?.name || "");
+                  }}
+                >
+                  套用裝備 · {data.gear.name}
+                </button>
+              )}
               <div className="fl-form-grid">
                 {[
                   ["rod", "Rod"],
                   ["reel", "Reel"],
-                  ["line", "Line"],
+                  ["line", "Main Line"],
+                  ["leaderLine", "Leader Line"],
                   ["lure", "Lure / Bait"],
                 ].map(([name, label]) => (
                   <label key={name}>
                     {label}
-                    <input name={name} maxLength={160} />
+                    <input
+                      name={name}
+                      maxLength={160}
+                      value={setup[name as keyof typeof setup]}
+                      onChange={(e) => {
+                        setSetup((prev) => ({
+                          ...prev,
+                          [name]: e.target.value,
+                        }));
+                        setGearName("");
+                      }}
+                    />
                   </label>
                 ))}
               </div>
