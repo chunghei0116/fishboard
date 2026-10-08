@@ -86,3 +86,10 @@ Chrome verification compressed an 18.7 MiB PNG to a 0.95 MiB JPEG at 2560px, the
 ## Mobile fields and save feedback
 
 Below 600px every input uses one full-width grid column, including date and period. Date inputs explicitly reset browser intrinsic sizing; measurement units and photo previews cannot force their parent wider. Chrome checks at 320px and 390px covered names, measurements, date, periods, location and expanded gear inputs. Save displays an accessible pixel fish status popup, prevents repeated submission and dismissal during the operation, and respects reduced motion. A real temporary existing-species catch with photo was saved and cleaned up without removing the shared species or personal records.
+
+
+## Fish orientation
+
+Generated sprites use an upright horizontal side profile, head on the left and tail on the right. After cutout, a 256px neutral-background preview is checked with Workers AI `@cf/google/gemma-4-26b-a4b-it`. Confirmed right-facing or inverted images are mirrored losslessly before upload. Unclear results or provider failures reject the save and use the existing upload rollback; unchecked sprites are not saved. This adds one small vision request per generated species and needs the same Workers AI account permission. The catch route allows 180 seconds for generation plus verification.
+
+Legacy species can retain their original image using `pixelFacing` and `pixelInverted` display metadata. The shared PixelFish component applies this across the log, collection, details and aquarium. Aquarium motion keeps a fixed head-left orientation. Two existing stored species were audited; one needed a horizontal mirror. The change updates only orientation metadata and retains original photos, sprites and catches.

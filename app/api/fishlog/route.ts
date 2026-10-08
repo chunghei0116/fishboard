@@ -7,7 +7,7 @@ import {
   FishlogError,
   generationConfigured,
 } from "@/lib/fishlog-env";
-export const maxDuration = 120;
+export const maxDuration = 180;
 import { safeId } from "@/lib/fishlog-security";
 import {
   listDocuments,

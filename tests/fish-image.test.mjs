@@ -36,3 +36,27 @@ test("rejects huge image header before decompressing", () => {
   view.setUint32(20, 100000);
   assert.throws(() => mod.pngDimensions(bytes, 1024));
 });
+
+test("right-facing fish are mirrored losslessly, including alpha", () => {
+  const pixels = new Uint8Array([
+    1, 2, 3, 0, 4, 5, 6, 128, 7, 8, 9, 255, 10, 11, 12, 255, 13, 14, 15, 0, 16,
+    17, 18, 128,
+  ]);
+  assert.deepEqual(mod.orientFishPixels(pixels, 3, 2, "left"), pixels);
+  const flipped = mod.orientFishPixels(pixels, 3, 2, "right");
+  assert.deepEqual(
+    [...flipped],
+    [
+      7, 8, 9, 255, 4, 5, 6, 128, 1, 2, 3, 0, 16, 17, 18, 128, 13, 14, 15, 0,
+      10, 11, 12, 255,
+    ],
+  );
+  assert.deepEqual(mod.orientFishPixels(flipped, 3, 2, "right"), pixels);
+  assert.deepEqual(
+    [...mod.orientFishPixels(pixels, 3, 2, "left", true)],
+    [
+      10, 11, 12, 255, 13, 14, 15, 0, 16, 17, 18, 128, 1, 2, 3, 0, 4, 5, 6, 128,
+      7, 8, 9, 255,
+    ],
+  );
+});

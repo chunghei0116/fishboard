@@ -48,3 +48,22 @@ export function removeMatte(input: Uint8Array, width: number, height: number) {
   }
   return data;
 }
+
+/** Mirror without resampling, preserving every RGBA pixel and transparent edge. */
+export function orientFishPixels(
+  input: Uint8Array,
+  width: number,
+  height: number,
+  facing: "left" | "right",
+  inverted = false,
+) {
+  const output = new Uint8Array(input.length);
+  for (let y = 0; y < height; y++)
+    for (let x = 0; x < width; x++) {
+      const sourceX = facing === "right" ? width - 1 - x : x;
+      const sourceY = inverted ? height - 1 - y : y;
+      const source = (sourceY * width + sourceX) * 4;
+      output.set(input.subarray(source, source + 4), (y * width + x) * 4);
+    }
+  return output;
+}

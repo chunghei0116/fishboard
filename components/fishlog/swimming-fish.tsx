@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { motion, useAnimationFrame, useMotionValue } from "framer-motion";
 import type { SpeciesSummary } from "@/data/types";
 import { swimPosition, swimProfile } from "@/lib/fish-swimming";
@@ -29,8 +29,6 @@ export default function SwimmingFish({
   const profile = useMemo(() => swimProfile(fish.id, index), [fish.id, index]);
   const x = useMotionValue(0),
     y = useMotionValue(0);
-  const [direction, setDirection] = useState(1);
-  const facing = useRef(1);
   useEffect(() => {
     const node = host.current,
       tank = node?.parentElement;
@@ -74,13 +72,6 @@ export default function SwimmingFish({
       );
     x.set(position.x);
     y.set(position.y);
-    if (Math.abs(position.velocity) > 0.025) {
-      const next = position.velocity > 0 ? -1 : 1;
-      if (next !== facing.current) {
-        facing.current = next;
-        setDirection(next);
-      }
-    }
   });
   return (
     <motion.div ref={host} className="fl-swimmer" style={{ x, y }}>
@@ -92,13 +83,9 @@ export default function SwimmingFish({
         aria-describedby={selected ? `fish-tooltip-${fish.id}` : undefined}
         onClick={onSelect}
       >
-        <motion.span
-          className="fl-swimmer-image"
-          animate={{ scaleX: direction }}
-          transition={{ duration: stopped ? 0 : 0.65, ease: "easeInOut" }}
-        >
+        <span className="fl-swimmer-image">
           <PixelFish species={fish} />
-        </motion.span>
+        </span>
         <span
           className="fl-fish-tooltip"
           id={`fish-tooltip-${fish.id}`}

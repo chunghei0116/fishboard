@@ -5,6 +5,8 @@ export type Species = {
   scientificName?: string;
   pixelImage: string;
   sprite?: number;
+  pixelFacing?: "left" | "right";
+  pixelInverted?: boolean;
 };
 export type Catch = {
   id: string;
