@@ -35,14 +35,14 @@ export function Collection() {
     <>
       <div className="fl-page-heading">
         <h1>
-          COLLECTION<span className="fl-heading-count">{species.length}</span>
+          魚種圖鑑<span className="fl-heading-count">{species.length}</span>
         </h1>
       </div>
       <div className="fl-collection">
         {species.map((fish, index) => (
           <div className="fl-species-card" key={fish.id}>
             <span className="fl-species-number">
-              {String(index + 1).padStart(2, "0")} / UNLOCKED
+              {String(index + 1).padStart(2, "0")} / 已解鎖
             </span>
             <PixelFish species={fish} />
             <h2>{speciesName(fish)}</h2>
@@ -50,16 +50,14 @@ export function Collection() {
               <p>{fish.englishName.toUpperCase()}</p>
             )}
             <div>
-              <span>{fish.totalCaught} CATCHES</span>
-              <span>BEST {fish.bestLength ?? "—"} cm</span>
+              <span>{fish.totalCaught} 次釣獲</span>
+              <span>最長 {fish.bestLength ?? "—"} 厘米</span>
             </div>
           </div>
         ))}
       </div>
       {!species.length && !loading && (
-        <div className="fl-empty">
-          第一條 Catch 保存後，魚種就會出現喺呢度。
-        </div>
+        <div className="fl-empty">第一筆漁獲儲存後，魚種就會出現喺呢度。</div>
       )}
     </>
   );
@@ -74,7 +72,7 @@ export function SpeciesDetail({ id }: { id: string }) {
   return (
     <>
       <Link className="fl-back" href="/collection">
-        <ArrowLeft size={15} /> BACK TO COLLECTION
+        <ArrowLeft size={15} /> 返回魚種圖鑑
       </Link>
       <section className="fl-species-hero">
         <div className="fl-detail-fish">
@@ -89,24 +87,24 @@ export function SpeciesDetail({ id }: { id: string }) {
           <div className="fl-stats">
             <div>
               <b>{fish.totalCaught}</b>
-              <span>CATCHES</span>
+              <span>釣獲次數</span>
             </div>
             <div>
               <b>
                 {fish.bestLength ?? "—"}
-                <small> cm</small>
+                <small> 厘米</small>
               </b>
-              <span>BEST LENGTH</span>
+              <span>最長紀錄</span>
             </div>
             <div>
               <b className="fl-stat-date">{fish.firstCaughtDate}</b>
-              <span>FIRST CAUGHT</span>
+              <span>首次釣獲</span>
             </div>
           </div>
         </div>
       </section>
       <div className="fl-section-header">
-        <h2>CATCH HISTORY</h2>
+        <h2>釣獲歷史</h2>
       </div>
       <CatchRows
         catches={sortCatches(data.catches.filter((c) => c.speciesId === id))}
@@ -122,28 +120,28 @@ export function CatchDetail({ id }: { id: string }) {
   if (loading) return <p className="fl-loading">讀取紀錄中…</p>;
   if (!record || !fish) return <Missing />;
   const fields = [
-    ["DATE", record.date],
-    ["TIME", catchTimeLabel(record)],
-    ["LOCATION", record.location],
-    ["LENGTH", record.length ? `${record.length} cm` : undefined],
-    ["WEIGHT", record.weight ? `${record.weight} g` : undefined],
-    ["ROD", record.rod],
-    ["REEL", record.reel],
-    ["MAIN LINE", record.line],
-    ["LEADER LINE", record.leaderLine],
-    ["LURE / BAIT", record.lure],
+    ["日期", record.date],
+    ["時段", catchTimeLabel(record)],
+    ["地點", record.location],
+    ["長度", record.length ? `${record.length} 厘米` : undefined],
+    ["重量", record.weight ? `${record.weight} 克` : undefined],
+    ["釣竿", record.rod],
+    ["魚輪", record.reel],
+    ["主線", record.line],
+    ["前導線", record.leaderLine],
+    ["擬餌／魚餌", record.lure],
   ];
   return (
     <>
       <Link className="fl-back" href="/#catch-log">
-        <ArrowLeft size={15} /> BACK TO CATCH LOG
+        <ArrowLeft size={15} /> 返回漁獲紀錄
       </Link>
       <div className="fl-detail-heading">
         <h1>{speciesName(fish)}</h1>
         <Link href={`/species/${fish.id}`}>
           {fish.chineseName && fish.englishName
             ? fish.englishName.toUpperCase()
-            : "SPECIES"}{" "}
+            : "魚種資料"}{" "}
           <ArrowUpRight size={14} />
         </Link>
       </div>
@@ -165,7 +163,7 @@ export function CatchDetail({ id }: { id: string }) {
             ) : (
               <div>未提供原始魚相</div>
             )}
-            <figcaption>ORIGINAL CATCH PHOTO</figcaption>
+            <figcaption>原始魚相</figcaption>
           </figure>
         </div>
         <div>
@@ -178,7 +176,7 @@ export function CatchDetail({ id }: { id: string }) {
             ))}
           </dl>
           <section className="fl-notes">
-            <h2>NOTES</h2>
+            <h2>備註</h2>
             <p>{record.note || "未記錄"}</p>
           </section>
         </div>
@@ -190,10 +188,10 @@ export function CatchDetail({ id }: { id: string }) {
 function Missing() {
   return (
     <div className="fl-empty">
-      <span className="fl-eyebrow">RECORD NOT FOUND</span>
+      <span className="fl-eyebrow">找不到紀錄</span>
       <h1>搵唔到呢條紀錄。</h1>
       <p>紀錄可能未同步，或者呢條連結已經無效。</p>
-      <Link href="/">返回 Catch Log →</Link>
+      <Link href="/">返回漁獲紀錄 →</Link>
     </div>
   );
 }

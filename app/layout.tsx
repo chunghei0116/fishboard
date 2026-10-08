@@ -5,9 +5,8 @@ import { FishLogProvider } from "@/components/fishlog/provider";
 import { JournalTheme } from "@/components/fishlog/theme";
 import Shell from "@/components/fishlog/shell";
 export const metadata: Metadata = {
-  title: "FISH LOG · My waters, my catches.",
-  description:
-    "留住每一次漁獲。A personal fishing journal, one fish at a time.",
+  title: "釣魚日誌 · 我的水域，我的漁獲。",
+  description: "留住每一次漁獲，收藏每一個水邊故事。",
   icons: { icon: "/favicon.svg" },
 };
 export default function RootLayout({

@@ -12,7 +12,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
     <div className={`fl-shell${user ? "" : " fl-shell-guest"}`}>
       <header className="fl-header">
         <div className="fl-brand-group">
-          <Link href="/" className="fl-brand" aria-label="Fish Log 首頁">
+          <Link href="/" className="fl-brand" aria-label="釣魚日誌首頁">
             <svg
               width="42"
               height="49"
@@ -28,8 +28,8 @@ export default function Shell({ children }: { children: React.ReactNode }) {
               />
             </svg>
             <span>
-              <b>FISH LOG</b>
-              <small>MY WATERS, MY CATCHES.</small>
+              <b>釣魚日誌</b>
+              <small>我的水域，我的漁獲。</small>
             </span>
           </Link>
           <ThemeSwitch />
@@ -38,7 +38,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           <Link
             href="/settings"
             className="fl-settings-link"
-            aria-label="Settings"
+            aria-label="設定"
             aria-current={path === "/settings" ? "page" : undefined}
           >
             <Settings size={19} />
@@ -49,10 +49,10 @@ export default function Shell({ children }: { children: React.ReactNode }) {
         <>
           <nav className="fl-bottom-nav" aria-label="主要導覽">
             {[
-              { href: "/", label: "HOME", Icon: House },
-              { href: "/collection", label: "COLLECTION", Icon: Grid2X2 },
-              { href: "/map", label: "MAP", Icon: MapPin },
-              { href: "/gear", label: "GEAR", Icon: Backpack },
+              { href: "/", label: "首頁", Icon: House },
+              { href: "/collection", label: "圖鑑", Icon: Grid2X2 },
+              { href: "/map", label: "地圖", Icon: MapPin },
+              { href: "/gear", label: "裝備", Icon: Backpack },
             ].map(({ href, label, Icon }) => (
               <Link
                 key={href}

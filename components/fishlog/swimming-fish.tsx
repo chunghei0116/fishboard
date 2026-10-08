@@ -97,8 +97,8 @@ export default function SwimmingFish({
             <span>{fish.englishName}</span>
           )}
           <small>
-            {fish.totalCaught} catches · Best{" "}
-            {fish.bestLength ? `${fish.bestLength} cm` : "—"}
+            {fish.totalCaught} 次釣獲 · 最長{" "}
+            {fish.bestLength ? `${fish.bestLength} 厘米` : "—"}
           </small>
         </span>
       </button>

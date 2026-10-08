@@ -35,7 +35,7 @@ export default function Aquarium({
         }}
       >
         <div className="fl-tank-count">
-          {total} CAUGHT <span>/ {species.length} SPECIES</span>
+          {total} 筆漁獲 <span>/ {species.length} 個魚種</span>
         </div>
         <div className="fl-tank-water" aria-hidden="true">
           <span className="fl-sun" />
@@ -76,9 +76,9 @@ export default function Aquarium({
           <p className="fl-tank-empty">第一尾魚，第一個故事。</p>
         )}
         <div className="fl-tank-sign">
-          DIFFERENT WATERS
+          不同水域
           <br />
-          SAME OBSESSION.
+          同一份熱愛。
         </div>
         <button
           className="fl-pause"
@@ -91,7 +91,7 @@ export default function Aquarium({
       </section>
       <a className="fl-scroll" href="#catch-log">
         <ChevronDown size={20} />
-        <span>SCROLL FOR CATCH LOG</span>
+        <span>往下查看漁獲紀錄</span>
       </a>
     </>
   );

@@ -196,7 +196,7 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
     >
       <div className="fl-dialog-handle" aria-hidden="true" />
       <header className="fl-dialog-header">
-        <h2 id="add-catch-title">ADD CATCH</h2>
+        <h2 id="add-catch-title">新增漁獲</h2>
         <button
           type="button"
           className="fl-dialog-close"
@@ -269,7 +269,7 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
                     inputMode="decimal"
                     placeholder="—"
                   />
-                  <span>cm</span>
+                  <span>厘米</span>
                 </span>
               </label>
               <label className="fl-measurement">
@@ -284,12 +284,12 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
                     inputMode="decimal"
                     placeholder="—"
                   />
-                  <span>g</span>
+                  <span>克</span>
                 </span>
               </label>
             </div>
             <section className="fl-compact-section">
-              <h3>WHEN &amp; WHERE</h3>
+              <h3>時間與地點</h3>
               <div className="fl-form-grid">
                 <label>
                   日期
@@ -333,7 +333,7 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
                     name="location"
                     required
                     maxLength={160}
-                    placeholder="例如 Cheung Sha Wan"
+                    placeholder="例如 長沙灣"
                   />
                 </label>
               </div>
@@ -363,7 +363,7 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
               </span>
             </label>
             <details className="fl-optional-section">
-              <summary>Catch setup</summary>
+              <summary>釣組裝備</summary>
               {data.gear && (
                 <button
                   type="button"
@@ -384,11 +384,11 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
               )}
               <div className="fl-form-grid">
                 {[
-                  ["rod", "Rod"],
-                  ["reel", "Reel"],
-                  ["line", "Main Line"],
-                  ["leaderLine", "Leader Line"],
-                  ["lure", "Lure / Bait"],
+                  ["rod", "釣竿"],
+                  ["reel", "魚輪"],
+                  ["line", "主線"],
+                  ["leaderLine", "前導線"],
+                  ["lure", "擬餌／魚餌"],
                 ].map(([name, label]) => (
                   <label key={name}>
                     {label}
@@ -409,9 +409,9 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
               </div>
             </details>
             <details className="fl-optional-section">
-              <summary>Notes</summary>
+              <summary>備註</summary>
               <label>
-                <span className="fl-sr-only">Notes</span>
+                <span className="fl-sr-only">備註</span>
                 <textarea
                   name="note"
                   maxLength={4000}
@@ -436,7 +436,7 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
             取消
           </button>
           <button className="fl-primary" disabled={busy || preparing}>
-            {busy ? "儲存中…" : preparing ? "處理圖片中…" : "SAVE CATCH"}
+            {busy ? "儲存中…" : preparing ? "處理圖片中…" : "儲存漁獲"}
           </button>
         </footer>
       </form>

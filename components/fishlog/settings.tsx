@@ -31,7 +31,7 @@ export default function Settings() {
   return (
     <div className="fl-settings">
       <div className="fl-page-heading">
-        <h1>SETTINGS</h1>
+        <h1>設定</h1>
       </div>
       {error && (
         <p className="fl-error" role="alert">
@@ -39,7 +39,7 @@ export default function Settings() {
         </p>
       )}
       <section className="fl-settings-section">
-        <h2>{user ? user.displayName || "私人帳戶" : "Private journal"}</h2>
+        <h2>{user ? user.displayName || "私人帳戶" : "私人日誌"}</h2>
         <p>
           {user
             ? user.email
@@ -56,13 +56,13 @@ export default function Settings() {
         </button>
       </section>
       <section className="fl-settings-section">
-        <h2>Your records</h2>
+        <h2>你的紀錄</h2>
         <p>
-          {data.catches.length} catches ·{" "}
-          {new Set(data.catches.map((c) => c.speciesId)).size} species
+          {data.catches.length} 筆漁獲 ·{" "}
+          {new Set(data.catches.map((c) => c.speciesId)).size} 個魚種
         </p>
         <button className="fl-secondary" onClick={exportData}>
-          匯出 JSON 備份
+          匯出備份
         </button>
         {demo && (
           <button
@@ -74,7 +74,7 @@ export default function Settings() {
         )}
         {confirmReset && (
           <div>
-            <p>會移除呢個瀏覽器新增嘅示範紀錄。可先匯出 JSON 備份。</p>
+            <p>會移除呢個瀏覽器新增嘅示範紀錄。可先匯出備份。</p>
             <button
               className="fl-secondary"
               onClick={() => {
@@ -88,23 +88,23 @@ export default function Settings() {
         )}
       </section>
       <section className="fl-settings-section">
-        <h2>Connection</h2>
+        <h2>服務狀態</h2>
         <div className="fl-status-list">
           <div>
-            PRIVATE LOGIN
-            <span>{config?.firebase ? "Ready" : "Not configured"}</span>
+            私人登入
+            <span>{config?.firebase ? "已就緒" : "未設定"}</span>
           </div>
           <div>
-            PHOTO STORAGE
-            <span>{config?.storageReady ? "Ready" : "Not configured"}</span>
+            相片儲存
+            <span>{config?.storageReady ? "已就緒" : "未設定"}</span>
           </div>
           <div>
-            PIXEL FISH GENERATION
-            <span>{config?.generationReady ? "Ready" : "Not configured"}</span>
+            像素魚生成
+            <span>{config?.generationReady ? "已就緒" : "未設定"}</span>
           </div>
         </div>
         <p>
-          未設定的服務需要由網站擁有人接上。你仍可先瀏覽示範魚種與 Catch Log。
+          未設定的服務需要由網站擁有人接上。你仍可先瀏覽示範魚種與 漁獲紀錄。
         </p>
       </section>
     </div>

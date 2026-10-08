@@ -24,7 +24,10 @@ export function CatchRows({
               <b>{date.slice(8)}</b>
               <span>
                 {day
-                  .toLocaleDateString("en", { month: "short", timeZone: "UTC" })
+                  .toLocaleDateString("zh-HK", {
+                    month: "short",
+                    timeZone: "UTC",
+                  })
                   .toUpperCase()}
               </span>
               <span>{date.slice(0, 4)}</span>
@@ -58,7 +61,7 @@ export function CatchRows({
                         {c.location}
                       </span>
                       <span className="fl-catch-length">
-                        {c.length ?? "—"} <small>cm</small>
+                        {c.length ?? "—"} <small>厘米</small>
                       </span>
                       <ArrowRight className="fl-card-arrow" size={17} />
                     </Link>
@@ -91,13 +94,13 @@ export default function CatchLog({
     <section id="catch-log" className="fl-log">
       <div className="fl-section-header fl-log-header">
         <div className="fl-log-heading">
-          <h1>CATCH LOG</h1>
+          <h1>漁獲紀錄</h1>
           <button
             type="button"
             className="fl-add-catch"
             onClick={() => setAdding(true)}
           >
-            <Plus size={14} /> ADD CATCH
+            <Plus size={14} /> 新增漁獲
           </button>
         </div>
         <div className="fl-filters">
@@ -111,14 +114,14 @@ export default function CatchLog({
               setYear("");
             }}
           >
-            ALL
+            全部
           </button>
           <select
-            aria-label="Filter by species"
+            aria-label="按魚種篩選"
             value={selectedSpecies}
             onChange={(e) => setSpecies(e.target.value)}
           >
-            <option value="">SPECIES</option>
+            <option value="">魚種</option>
             {species
               .filter((s) => catches.some((c) => c.speciesId === s.id))
               .map((s) => (
@@ -128,21 +131,21 @@ export default function CatchLog({
               ))}
           </select>
           <select
-            aria-label="Filter by location"
+            aria-label="按地點篩選"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
           >
-            <option value="">LOCATION</option>
+            <option value="">地點</option>
             {[...new Set(catches.map((c) => c.location))].map((l) => (
               <option key={l}>{l}</option>
             ))}
           </select>
           <select
-            aria-label="Filter by year"
+            aria-label="按年份篩選"
             value={year}
             onChange={(e) => setYear(e.target.value)}
           >
-            <option value="">YEAR</option>
+            <option value="">年份</option>
             {[...new Set(catches.map((c) => c.date.slice(0, 4)))]
               .sort()
               .reverse()

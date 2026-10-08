@@ -32,13 +32,14 @@ export default function Landing() {
           fetchPriority="high"
           decoding="async"
         />
-        <figcaption>DIFFERENT WATERS. SAME OBSESSION.</figcaption>
+        <figcaption>不同水域，同一份熱愛。</figcaption>
       </figure>
       <section className="fl-login-widget" aria-label="Google 登入">
-        <span className="fl-login-label">MY WATERS, MY CATCHES.</span>
+        <span className="fl-login-label">我的水域，我的漁獲。</span>
         <h1>
-          Every catch.
-          <br />A little story<span>.</span>
+          每一尾漁獲，
+          <br />
+          一個小故事<span>。</span>
         </h1>
         <p className="fl-login-slogan">每一次出海，都值得記低。</p>
         <button
@@ -68,7 +69,7 @@ export default function Landing() {
             ? "準備登入…"
             : busy
               ? "正在連接 Google…"
-              : "Continue with Google"}
+              : "使用 Google 登入"}
         </button>
         <p className="fl-login-note">登入後，收藏你自己的魚種與釣魚紀錄。</p>
         {!loading && !config?.firebase && (

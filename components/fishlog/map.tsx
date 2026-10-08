@@ -36,13 +36,24 @@ export default function CatchMap() {
         if (!response.ok) throw Error("Map unavailable");
         const style = (await response.json()) as StyleSpecification;
         if (disposed || !host.current) return;
-        M.setWorkerUrl(new URL("maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).toString());
+        M.setWorkerUrl(
+          new URL(
+            "maplibre-gl/dist/maplibre-gl-worker.mjs",
+            import.meta.url,
+          ).toString(),
+        );
         const instance = new M.Map({
           container: host.current,
           style: journalMapStyle(style, resolvedTheme === "dark"),
           center: [114.195, 22.305],
           zoom: 11,
           scrollZoom: false,
+          locale: {
+            "Map.Title": "釣獲地點地圖",
+            "NavigationControl.ZoomIn": "放大地圖",
+            "NavigationControl.ZoomOut": "縮小地圖",
+            "AttributionControl.ToggleAttribution": "地圖資料來源",
+          },
           dragRotate: false,
         });
         map.current = instance;
@@ -67,9 +78,9 @@ export default function CatchMap() {
           button.textContent = String(records.length);
           button.setAttribute(
             "aria-label",
-            `${c.location} · ${records.length} catches`,
+            `${c.location} · ${records.length} 筆漁獲`,
           );
-          button.title = `${c.location} · ${records.length} catches`;
+          button.title = `${c.location} · ${records.length} 筆漁獲`;
           button.addEventListener("click", () => setSelected(c.location));
           new M.Marker({ element: button })
             .setLngLat([c.longitude!, c.latitude!])
@@ -108,7 +119,7 @@ export default function CatchMap() {
   return (
     <>
       <div className="fl-page-heading">
-        <h1>MAP</h1>
+        <h1>釣獲地圖</h1>
       </div>
       {error && <p className="fl-error">{error}</p>}
       <div className="fl-map-layout">
@@ -121,10 +132,9 @@ export default function CatchMap() {
             className={!selected ? "is-selected" : ""}
             onClick={() => setSelected("")}
           >
-            <b>All waters</b>
+            <b>所有水域</b>
             <span>
-              {data.catches.length} CATCHES / {locations.length} MAPPED
-              LOCATIONS
+              {data.catches.length} 筆漁獲 / {locations.length} 個已標記地點
             </span>
           </button>
           {locations.map((location) => {
@@ -137,8 +147,8 @@ export default function CatchMap() {
               >
                 <b>{location}</b>
                 <span>
-                  {records.length} CATCHES /{" "}
-                  {new Set(records.map((c) => c.speciesId)).size} SPECIES
+                  {records.length} 筆漁獲 /{" "}
+                  {new Set(records.map((c) => c.speciesId)).size} 個魚種
                 </span>
               </button>
             );
@@ -146,12 +156,12 @@ export default function CatchMap() {
         </div>
       </div>
       <div className="fl-section-header" style={{ marginTop: 45 }}>
-        <h2>{selected || "CATCH RECORDS"}</h2>
+        <h2>{selected || "漁獲紀錄"}</h2>
       </div>
       <CatchRows catches={records} species={data.species} />
       {!records.length && (
         <div className="fl-empty">
-          未有地點紀錄。新增 Catch 時填寫座標，就會喺地圖出現。
+          未有地點紀錄。新增漁獲時填寫座標，就會喺地圖出現。
         </div>
       )}
     </>
