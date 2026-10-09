@@ -18,6 +18,13 @@ export function LocationInput() {
   const [active, setActive] = useState(-1);
   const input = useRef<HTMLInputElement>(null);
   const field = useRef<HTMLDivElement>(null);
+  const press = useRef<{
+    id: string;
+    pointerId: number;
+    x: number;
+    y: number;
+  } | null>(null);
+  const suppressClick = useRef(false);
   const q = value.trim().replace(/\s+/g, " ");
   const places = result?.query === q ? result.places : [];
   const open = focused && !selected && !composing && q.length >= 2;
@@ -82,13 +89,13 @@ export function LocationInput() {
     };
   }, [q, selected, composing, focused]);
 
-  function choose(place: Place) {
+  function choose(place: Place, restoreFocus = true) {
     setSelected(place);
     setValue(place.name);
     setResult(null);
     setLoading(false);
     setActive(-1);
-    input.current?.focus();
+    if (restoreFocus) input.current?.focus();
   }
   return (
     <div ref={field} className="fl-wide fl-location-field">
@@ -182,9 +189,57 @@ export function LocationInput() {
                     role="option"
                     aria-selected={active === index}
                     onPointerDown={(event) => {
+                      if (event.button !== 0) return;
+                      press.current = {
+                        id: place.id,
+                        pointerId: event.pointerId,
+                        x: event.clientX,
+                        y: event.clientY,
+                      };
+                      suppressClick.current = false;
                       if (event.pointerType === "mouse") event.preventDefault();
                     }}
-                    onClick={() => choose(place)}
+                    onPointerMove={(event) => {
+                      const start = press.current;
+                      if (
+                        start &&
+                        Math.hypot(
+                          event.clientX - start.x,
+                          event.clientY - start.y,
+                        ) > 8
+                      ) {
+                        press.current = null;
+                        suppressClick.current = true;
+                      }
+                    }}
+                    onPointerCancel={() => {
+                      press.current = null;
+                      suppressClick.current = true;
+                    }}
+                    onPointerUp={(event) => {
+                      const start = press.current;
+                      press.current = null;
+                      if (
+                        !start ||
+                        start.id !== place.id ||
+                        start.pointerId !== event.pointerId ||
+                        Math.hypot(
+                          event.clientX - start.x,
+                          event.clientY - start.y,
+                        ) > 8
+                      )
+                        return;
+                      // Commit on the actual tap, before a compatibility click
+                      // can be lost when mobile focus / keyboard changes layout.
+                      event.preventDefault();
+                      event.stopPropagation();
+                      suppressClick.current = true;
+                      choose(place, false);
+                    }}
+                    onClick={(event) => {
+                      if (event.detail === 0 || !suppressClick.current)
+                        choose(place);
+                    }}
                   >
                     <MapPin size={15} aria-hidden="true" />
                     <span>

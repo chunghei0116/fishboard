@@ -27,11 +27,12 @@ const validation = url(
 const gearValidation = url(
   await readFile(new URL("../lib/gear.ts", import.meta.url), "utf8"),
 );
+const apiCodec = await import(security);
 const auth = url(
   `import {FishlogError} from '${env}';export async function privateUser(){if(!globalThis.__v3.uid)throw new FishlogError('login',401);return {uid:globalThis.__v3.uid}};export function mutationOrigin(r){if(r.headers.get('origin')!=='https://fish.test')throw new FishlogError('origin',403)}`,
 );
 const db = url(
-  `export async function listDocuments(uid,col){globalThis.__v3.calls.push(['list',uid,col]);return []};export async function getDocument(uid,col,id){globalThis.__v3.calls.push(['get',uid,col,id]);return globalThis.__v3.documents[col+'/'+id]||null};export async function claimRequest(uid,id){globalThis.__v3.calls.push(['claim',uid,id]);return globalThis.__v3.previous};export function documentPath(uid,col,id){return 'users/'+uid+'/'+col+'/'+id};export function write(uid,col,id,value){return {uid,col,id,value}};export async function commit(writes){globalThis.__v3.calls.push(['commit',writes]);if(globalThis.__v3.failCommit&&writes.some(w=>w.col==='catches'||w.delete))throw Error('ambiguous commit');return {}}`,
+  `export async function listDocuments(uid,col){globalThis.__v3.calls.push(['list',uid,col]);return globalThis.__v3.lists?.[col]||[]};export async function getDocument(uid,col,id){globalThis.__v3.calls.push(['get',uid,col,id]);return globalThis.__v3.documents[col+'/'+id]||null};export async function claimRequest(uid,id){globalThis.__v3.calls.push(['claim',uid,id]);return globalThis.__v3.previous};export function documentPath(uid,col,id){return 'users/'+uid+'/'+col+'/'+id};export function write(uid,col,id,value){return {uid,col,id,value}};export async function commit(writes){globalThis.__v3.calls.push(['commit',writes]);if(globalThis.__v3.failCommit&&writes.some(w=>w.col==='catches'||w.delete))throw Error('ambiguous commit');return {}}`,
 );
 const storage = url(
   `export function cloudinaryConfigured(){return true};export async function uploadImage(env,file,id){globalThis.__v3.calls.push(['upload',id]);if(globalThis.__v3.failBadge&&id.endsWith('/badge'))throw Error('upload');return 'cloudinary:test/'+id+'.png'};export async function removeImage(env,ref){globalThis.__v3.calls.push(['remove',ref]);if(globalThis.__v3.failRemove)throw Error('cleanup')};export async function readImage(){globalThis.__v3.calls.push(['read']);return new Response('image',{headers:{'content-type':'image/png'}})}`,
@@ -76,12 +77,17 @@ function request({
   chineseName = "新魚",
   englishName = "New fish",
   period,
+  location = "Harbour",
+  latitude,
+  longitude,
 } = {}) {
   const f = new FormData();
   f.set("requestId", "unique-request");
   f.set("speciesId", newSpecies ? "new" : "known");
   f.set("date", "2026-10-06");
-  f.set("location", "Harbour");
+  f.set("location", location);
+  if (latitude !== undefined) f.set("latitude", String(latitude));
+  if (longitude !== undefined) f.set("longitude", String(longitude));
   if (newSpecies) {
     f.set("chineseName", chineseName);
     f.set("englishName", englishName);
@@ -385,4 +391,30 @@ test("catch stores main line, leader and loadout name as a historical snapshot",
   assert.equal(record.line, "PE 0.8");
   assert.equal(record.leaderLine, "8 lb");
   assert.equal(record.gearName, "Shore");
+});
+
+test("selected location coordinates reach Firestore writes and return in the map dataset", async () => {
+  const location = "長沙灣海濱花園",
+    latitude = 22.327497,
+    longitude = 114.147635;
+  assert.equal(
+    (await route.POST(request({ location, latitude, longitude }))).status,
+    201,
+  );
+  const writes = globalThis.__v3.calls
+    .filter((c) => c[0] === "commit")
+    .flatMap((c) => c[1]);
+  const saved = writes.find((w) => w.col === "catches");
+  assert.equal(saved.uid, "owner-a");
+  assert.equal(saved.value.location, location);
+  assert.equal(saved.value.latitude, latitude);
+  assert.equal(saved.value.longitude, longitude);
+  const persisted = apiCodec.decodeFields(apiCodec.encodeFields(saved.value));
+  globalThis.__v3.lists = { catches: [persisted] };
+  const response = await route.GET();
+  assert.equal(response.status, 200);
+  const dataset = await response.json();
+  assert.equal(dataset.catches[0].latitude, latitude);
+  assert.equal(dataset.catches[0].longitude, longitude);
+  assert.equal(dataset.catches[0].location, location);
 });

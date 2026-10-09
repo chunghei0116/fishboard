@@ -97,3 +97,95 @@ test("touch blur cannot remove a suggestion before click; selection submits coor
     globalThis.fetch = originalFetch;
   }
 });
+
+function pointer(target, type, x = 20, y = 20) {
+  const event = new dom.window.Event(type, { bubbles: true, cancelable: true });
+  Object.assign(event, {
+    pointerId: 1,
+    pointerType: "touch",
+    button: 0,
+    clientX: x,
+    clientY: y,
+  });
+  target.dispatchEvent(event);
+}
+test("a touch tap writes the full returned place name before any compatibility click", async () => {
+  const chosen = { ...place, name: "長沙灣海濱" };
+  globalThis.fetch = async () => Response.json({ places: [chosen] });
+  const root = createRoot(document.getElementById("root"));
+  try {
+    await act(async () => root.render(createElement(LocationInput)));
+    const input = document.querySelector('[name="location"]');
+    await act(async () => input.focus());
+    await type(input, "長沙灣海");
+    await act(async () => await pause(650));
+    const option = document.querySelector('[role="option"]');
+    assert.ok(option);
+    await act(async () => pointer(option, "pointerdown"));
+    await act(async () => input.blur());
+    await act(async () => pointer(option, "pointerup"));
+    assert.equal(input.value, "長沙灣海濱");
+    const form = new dom.window.FormData(document.getElementById("form"));
+    assert.equal(form.get("location"), "長沙灣海濱");
+    assert.equal(Number(form.get("latitude")), chosen.latitude);
+    assert.equal(Number(form.get("longitude")), chosen.longitude);
+  } finally {
+    await act(async () => root.unmount());
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("scrolling or cancelling a touch does not choose a place, while keyboard Enter does", async () => {
+  globalThis.fetch = async () => Response.json({ places: [place] });
+  const root = createRoot(document.getElementById("root"));
+  try {
+    await act(async () => root.render(createElement(LocationInput)));
+    const input = document.querySelector('[name="location"]');
+    await act(async () => input.focus());
+    await type(input, "富昌");
+    await act(async () => await pause(650));
+    const option = document.querySelector('[role="option"]');
+    await act(async () => {
+      pointer(option, "pointerdown");
+      pointer(option, "pointermove", 20, 60);
+      pointer(option, "pointerup", 20, 60);
+    });
+    assert.equal(input.value, "富昌");
+    assert.equal(
+      new dom.window.FormData(document.getElementById("form")).get("latitude"),
+      "",
+    );
+    await act(async () => {
+      pointer(option, "pointerdown");
+      pointer(option, "pointercancel");
+      pointer(option, "pointerup");
+    });
+    assert.equal(input.value, "富昌");
+    await act(async () =>
+      input.dispatchEvent(
+        new dom.window.KeyboardEvent("keydown", {
+          key: "ArrowDown",
+          bubbles: true,
+          cancelable: true,
+        }),
+      ),
+    );
+    await act(async () =>
+      input.dispatchEvent(
+        new dom.window.KeyboardEvent("keydown", {
+          key: "Enter",
+          bubbles: true,
+          cancelable: true,
+        }),
+      ),
+    );
+    assert.equal(input.value, place.name);
+    assert.equal(
+      new dom.window.FormData(document.getElementById("form")).get("location"),
+      place.name,
+    );
+  } finally {
+    await act(async () => root.unmount());
+    globalThis.fetch = originalFetch;
+  }
+});
