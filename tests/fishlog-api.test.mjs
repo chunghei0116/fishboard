@@ -418,3 +418,102 @@ test("selected location coordinates reach Firestore writes and return in the map
   assert.equal(dataset.catches[0].longitude, longitude);
   assert.equal(dataset.catches[0].location, location);
 });
+
+function editRequest(overrides = {}, origin = "https://fish.test") {
+  return new Request("https://fish.test/api/fishlog/catches/own", {
+    method: "PATCH",
+    headers: { origin, "content-type": "application/json" },
+    body: JSON.stringify({
+      speciesId: "known",
+      date: "2026-10-09",
+      location: "長沙灣海濱花園",
+      latitude: 22.327497,
+      longitude: 114.147638,
+      length: 34,
+      period: "evening",
+      expectedUpdatedAt: null,
+      ...overrides,
+    }),
+  });
+}
+test("edit saves corrected location and coordinates with revision guard while keeping photo and identity", async () => {
+  ownCatch();
+  const response = await deletion.PATCH(
+    editRequest({ id: "forged", photo: "evil", created: "forged" }),
+    deleteParams,
+  );
+  assert.equal(response.status, 200);
+  const saved = globalThis.__v3.calls.find((c) => c[0] === "commit")[1][0];
+  assert.equal(saved.uid, "owner-a");
+  assert.equal(saved.id, "own");
+  assert.equal(saved.value.id, "own");
+  assert.equal(saved.value.photo, "cloudinary:test/own.png");
+  assert.equal(saved.value.created, undefined);
+  assert.equal(saved.value.latitude, 22.327497);
+  assert.equal(saved.value.longitude, 114.147638);
+  assert.equal(saved.value.location, "長沙灣海濱花園");
+  assert.deepEqual(saved.currentDocument, { updateTime: "revision-1" });
+  assert.ok(saved.value.updatedAt);
+  assert.ok(
+    !globalThis.__v3.calls.some((c) =>
+      ["upload", "remove", "generate"].includes(c[0]),
+    ),
+  );
+});
+test("edit requires login, same origin and an owned catch", async () => {
+  globalThis.__v3.uid = null;
+  assert.equal((await deletion.PATCH(editRequest(), deleteParams)).status, 401);
+  globalThis.__v3.uid = "owner-a";
+  assert.equal(
+    (await deletion.PATCH(editRequest({}, "https://other.test"), deleteParams))
+      .status,
+    403,
+  );
+  assert.equal((await deletion.PATCH(editRequest(), deleteParams)).status, 404);
+  assert.ok(!globalThis.__v3.calls.some((c) => c[0] === "commit"));
+});
+test("edit rejects a missing species, incomplete coordinates and stale versions", async () => {
+  ownCatch();
+  assert.equal(
+    (await deletion.PATCH(editRequest({ speciesId: "other" }), deleteParams))
+      .status,
+    400,
+  );
+  assert.equal(
+    (await deletion.PATCH(editRequest({ longitude: undefined }), deleteParams))
+      .status,
+    400,
+  );
+  globalThis.__v3.documents["catches/own"].value.updatedAt = "newer";
+  assert.equal((await deletion.PATCH(editRequest(), deleteParams)).status, 409);
+  assert.ok(!globalThis.__v3.calls.some((c) => c[0] === "commit"));
+});
+test("edit can clear optional measurements and remove old coordinates after changing location", async () => {
+  ownCatch();
+  Object.assign(globalThis.__v3.documents["catches/own"].value, {
+    length: 21,
+    weight: 100,
+    latitude: 22.3,
+    longitude: 114.1,
+  });
+  assert.equal(
+    (
+      await deletion.PATCH(
+        editRequest({
+          location: "手動地點",
+          latitude: undefined,
+          longitude: undefined,
+          length: undefined,
+        }),
+        deleteParams,
+      )
+    ).status,
+    200,
+  );
+  const saved = globalThis.__v3.calls.find((c) => c[0] === "commit")[1][0]
+    .value;
+  assert.equal(saved.latitude, undefined);
+  assert.equal(saved.longitude, undefined);
+  assert.equal(saved.length, undefined);
+  assert.equal(saved.weight, undefined);
+});

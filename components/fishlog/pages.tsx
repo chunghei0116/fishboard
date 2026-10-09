@@ -1,6 +1,8 @@
 "use client";
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { useState } from "react";
+import dynamic from "next/dynamic";
+import { ArrowLeft, ArrowUpRight, Pencil } from "lucide-react";
 import { useFishLog } from "./provider";
 import {
   summarizeSpecies,
@@ -12,6 +14,7 @@ import PixelFish from "./pixel-fish";
 import Aquarium from "./aquarium";
 import DeleteCatch from "./delete-catch";
 import CatchLog, { CatchRows } from "./catch-log";
+const CatchEditor = dynamic(() => import("./add-catch"), { ssr: false });
 export function Home() {
   const { data, loading } = useFishLog();
   return (
@@ -114,6 +117,7 @@ export function SpeciesDetail({ id }: { id: string }) {
   );
 }
 export function CatchDetail({ id }: { id: string }) {
+  const [editing, setEditing] = useState(false);
   const { data, loading } = useFishLog();
   const record = data.catches.find((c) => c.id === id),
     fish = data.species.find((s) => s.id === record?.speciesId);
@@ -138,6 +142,13 @@ export function CatchDetail({ id }: { id: string }) {
       </Link>
       <div className="fl-detail-heading">
         <h1>{speciesName(fish)}</h1>
+        <button
+          type="button"
+          className="fl-edit-catch"
+          onClick={() => setEditing(true)}
+        >
+          <Pencil size={15} /> 編輯
+        </button>
         <Link href={`/species/${fish.id}`}>
           {fish.chineseName && fish.englishName
             ? fish.englishName.toUpperCase()
@@ -175,6 +186,9 @@ export function CatchDetail({ id }: { id: string }) {
         </div>
       </div>
       <DeleteCatch id={record.id} name={speciesName(fish)} />
+      {editing && (
+        <CatchEditor record={record} onClose={() => setEditing(false)} />
+      )}
     </>
   );
 }

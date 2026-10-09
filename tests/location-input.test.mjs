@@ -189,3 +189,166 @@ test("scrolling or cancelling a touch does not choose a place, while keyboard En
     globalThis.fetch = originalFetch;
   }
 });
+
+test("editing a stored location preserves coordinates until the user changes it", async () => {
+  const root = createRoot(document.getElementById("root"));
+  try {
+    await act(async () =>
+      root.render(
+        createElement(LocationInput, {
+          initial: {
+            location: place.name,
+            latitude: place.latitude,
+            longitude: place.longitude,
+          },
+        }),
+      ),
+    );
+    const input = document.querySelector('[name="location"]');
+    let form = new dom.window.FormData(document.getElementById("form"));
+    assert.equal(input.value, place.name);
+    assert.equal(Number(form.get("latitude")), place.latitude);
+    assert.equal(Number(form.get("longitude")), place.longitude);
+    await type(input, "改地點");
+    form = new dom.window.FormData(document.getElementById("form"));
+    assert.equal(form.get("latitude"), "");
+    assert.equal(form.get("longitude"), "");
+  } finally {
+    await act(async () => root.unmount());
+  }
+});
+
+const editorProvider = moduleURL(
+  `export function useFishLog(){return globalThis.__editorState}`,
+);
+const editorRouter = moduleURL(
+  `export function useRouter(){return {push(){throw Error('Edit must stay on detail')},replace(){}}}`,
+);
+const editorValidation = moduleURL(
+  ts.transpileModule(
+    await readFile(new URL("../lib/fish-log.ts", import.meta.url), "utf8"),
+    {
+      compilerOptions: {
+        module: ts.ModuleKind.ESNext,
+        target: ts.ScriptTarget.ES2022,
+      },
+    },
+  ).outputText,
+);
+const editorPhoto = moduleURL(
+  `export async function preparePhoto(){throw Error('Unexpected photo mutation')}`,
+);
+let editorSource = ts.transpileModule(
+  await readFile(
+    new URL("../components/fishlog/add-catch.tsx", import.meta.url),
+    "utf8",
+  ),
+  {
+    compilerOptions: {
+      module: ts.ModuleKind.ESNext,
+      target: ts.ScriptTarget.ES2022,
+      jsx: ts.JsxEmit.ReactJSX,
+    },
+  },
+).outputText;
+for (const [key, replacement] of Object.entries({
+  "./provider": editorProvider,
+  "next/navigation": editorRouter,
+  "./location-input": moduleURL(src),
+  "@/lib/fish-log": editorValidation,
+  "@/lib/photo-upload": editorPhoto,
+  "react/jsx-runtime": import.meta.resolve("react/jsx-runtime"),
+  react: import.meta.resolve("react"),
+  "lucide-react": import.meta.resolve("lucide-react"),
+}))
+  editorSource = editorSource.replaceAll(
+    `from "${key}"`,
+    `from "${replacement}"`,
+  );
+const { default: CatchEditor } = await import(moduleURL(editorSource));
+dom.window.HTMLDialogElement.prototype.showModal = function () {
+  this.open = true;
+};
+dom.window.HTMLDialogElement.prototype.close = function () {
+  this.open = false;
+};
+test("catch editor prefills the record and PATCHes measurements plus selected coordinates", async () => {
+  const record = {
+    id: "own",
+    speciesId: "known",
+    date: "2026-10-09",
+    period: "evening",
+    location: place.name,
+    latitude: place.latitude,
+    longitude: place.longitude,
+    length: 34,
+    weight: 200,
+    rod: "Daiwa",
+    note: "原備註",
+    photo: "/api/media/own?kind=photo",
+    updatedAt: "revision",
+  };
+  let sent,
+    refreshed = false,
+    closed = false;
+  globalThis.__editorState = {
+    data: {
+      catches: [record],
+      species: [
+        { id: "known", chineseName: "火點", englishName: "", pixelImage: "" },
+      ],
+    },
+    demo: false,
+    user: { uid: "owner" },
+    refresh: async () => {
+      refreshed = true;
+    },
+  };
+  globalThis.fetch = async (url, options) => {
+    sent = { url, ...options, body: JSON.parse(options.body) };
+    return Response.json({ id: "own" });
+  };
+  const oldFormData = globalThis.FormData;
+  globalThis.FormData = dom.window.FormData;
+  const root = createRoot(document.getElementById("root"));
+  try {
+    await act(async () =>
+      root.render(
+        createElement(CatchEditor, {
+          record,
+          onClose: () => {
+            closed = true;
+          },
+        }),
+      ),
+    );
+    assert.ok(document.querySelector("dialog[open]"));
+    assert.equal(document.querySelector('[name="location"]').value, place.name);
+    assert.equal(document.querySelector('[name="date"]').value, record.date);
+    assert.equal(document.querySelector('[name="rod"]').value, record.rod);
+    assert.equal(document.querySelector('[name="note"]').value, record.note);
+    assert.equal(document.querySelector('[name="photo"]'), null);
+    assert.equal(document.querySelector('option[value="new"]'), null);
+    const length = document.querySelector('[name="length"]');
+    await type(length, "42");
+    const form = document.querySelector("dialog form");
+    await act(async () => {
+      form.dispatchEvent(
+        new dom.window.Event("submit", { bubbles: true, cancelable: true }),
+      );
+      await pause(0);
+    });
+    assert.equal(sent.url, "/api/fishlog/catches/own");
+    assert.equal(sent.method, "PATCH");
+    assert.equal(sent.body.length, 42);
+    assert.equal(sent.body.location, place.name);
+    assert.equal(sent.body.latitude, place.latitude);
+    assert.equal(sent.body.longitude, place.longitude);
+    assert.equal(sent.body.expectedUpdatedAt, "revision");
+    assert.ok(refreshed && closed);
+  } finally {
+    await act(async () => root.unmount());
+    globalThis.FormData = oldFormData;
+    globalThis.fetch = originalFetch;
+  }
+});

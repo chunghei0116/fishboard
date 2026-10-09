@@ -28,6 +28,7 @@ export type Catch = {
   lure?: string;
   note?: string;
   created?: string;
+  updatedAt?: string;
 };
 export type SpeciesSummary = Species & {
   totalCaught: number;

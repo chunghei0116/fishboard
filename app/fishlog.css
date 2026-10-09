@@ -3349,3 +3349,11 @@ path.fl-rig-piece.is-active {
 .fl-place-spinner { animation: fl-place-spin 1s linear infinite; }
 @keyframes fl-place-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .fl-place-spinner { animation: none; } }
+
+.fl-edit-catch { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; padding: 9px 15px; border: 1px solid var(--fl-border); border-radius: 10px; background: var(--fl-surface); color: var(--fl-text); cursor: pointer; font-size: 13px; }
+.fl-edit-catch:hover { border-color: #278de5; color: #278de5; }
+.fl-edit-catch:focus-visible { outline: 2px solid #278de5; outline-offset: 3px; }
+.fl-detail-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 16px; align-items: center; }
+.fl-detail-heading h1 { min-width: 0; overflow-wrap: anywhere; }
+.fl-detail-heading > a { grid-column: 1 / -1; }
+.fl-edit-catch { white-space: nowrap; }

@@ -40,24 +40,34 @@ async function aiReference(file: File) {
   );
   return new File([blob], "reference.png", { type: "image/png" });
 }
-export default function AddCatch({ onClose }: { onClose?: () => void }) {
+export default function AddCatch({
+  onClose,
+  record,
+}: {
+  onClose?: () => void;
+  record?: Catch;
+}) {
   const { data, demo, user, config, saveDemo, refresh } = useFishLog();
   const router = useRouter();
-  const [speciesId, setSpeciesId] = useState(data.species[0]?.id || "new"),
+  const [speciesId, setSpeciesId] = useState(
+      record?.speciesId || data.species[0]?.id || "new",
+    ),
     [photo, setPhoto] = useState<File | null>(null),
     [preview, setPreview] = useState(""),
     [busy, setBusy] = useState(false),
     [preparing, setPreparing] = useState(false),
-    [period, setPeriod] = useState<"morning" | "evening" | "">(""),
+    [period, setPeriod] = useState<"morning" | "evening" | "">(
+      record?.period || "",
+    ),
     [error, setError] = useState("");
   const [setup, setSetup] = useState({
-    rod: "",
-    reel: "",
-    line: "",
-    leaderLine: "",
-    lure: "",
+    rod: record?.rod || "",
+    reel: record?.reel || "",
+    line: record?.line || "",
+    leaderLine: record?.leaderLine || "",
+    lure: record?.lure || "",
   });
-  const [gearName, setGearName] = useState("");
+  const [gearName, setGearName] = useState(record?.gearName || "");
   const request = useRef<string | null>(null);
   const submitting = useRef(false);
   const isNew = speciesId === "new";
@@ -85,6 +95,10 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
     dialog.current?.close();
     if (onClose) onClose();
     else router.replace("/");
+  }
+  function dismissAfterSave() {
+    dialog.current?.close();
+    onClose?.();
   }
   async function choose(file: File | undefined) {
     const selection = ++photoSelection.current;
@@ -115,7 +129,7 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
     setError("");
     try {
       const form = new FormData(event.currentTarget);
-      const id = request.current || crypto.randomUUID();
+      const id = record?.id || request.current || crypto.randomUUID();
       request.current = id;
       const nextSpeciesId = isNew ? id : speciesId;
       const raw: Record<string, unknown> = {};
@@ -134,11 +148,41 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
       raw.gearName = gearName || undefined;
       form.set("gearName", gearName);
       raw.speciesId = nextSpeciesId;
+      if (record?.time) raw.time = record.time;
       for (const key of ["length", "weight", "latitude", "longitude"]) {
         const value = form.get(key);
         if (value !== null && value !== "") raw[key] = Number(value);
       }
       const input = validateCatch(raw);
+      if (record) {
+        if (demo) {
+          saveDemo({
+            ...data,
+            catches: data.catches.map((c) =>
+              c.id === record.id ? { ...c, ...input } : c,
+            ),
+          });
+        } else {
+          if (!user) throw Error("請先登入私人帳戶");
+          const response = await fetch(
+            `/api/fishlog/catches/${encodeURIComponent(record.id)}`,
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                ...input,
+                expectedUpdatedAt: record.updatedAt || record.created || null,
+              }),
+            },
+          );
+          const result = (await response.json()) as { error?: string };
+          if (!response.ok)
+            throw Error(result.error || "未能更新紀錄，請重試。");
+          await refresh();
+        }
+        dismissAfterSave();
+        return;
+      }
       if (demo) {
         if (isNew) throw Error("新增魚種需要登入並使用生圖服務。");
         const record: Catch = {
@@ -197,13 +241,13 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
     >
       <div className="fl-dialog-handle" aria-hidden="true" />
       <header className="fl-dialog-header">
-        <h2 id="add-catch-title">新增漁獲</h2>
+        <h2 id="add-catch-title">{record ? "編輯漁獲" : "新增漁獲"}</h2>
         <button
           type="button"
           className="fl-dialog-close"
           onClick={dismiss}
           disabled={busy || preparing}
-          aria-label="關閉新增漁獲"
+          aria-label={record ? "關閉編輯漁獲" : "關閉新增漁獲"}
         >
           <X size={19} />
         </button>
@@ -232,7 +276,7 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
                       {speciesName(s)}
                     </option>
                   ))}
-                  <option value="new">＋ 新魚種</option>
+                  {!record && <option value="new">＋ 新魚種</option>}
                 </select>
               </label>
               {isNew && (
@@ -263,6 +307,7 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
                 <span className="fl-unit-input">
                   <input
                     name="length"
+                    defaultValue={record?.length ?? ""}
                     type="number"
                     step="0.1"
                     min="0.1"
@@ -278,6 +323,7 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
                 <span className="fl-unit-input">
                   <input
                     name="weight"
+                    defaultValue={record?.weight ?? ""}
                     type="number"
                     step="1"
                     min="1"
@@ -298,9 +344,12 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
                     name="date"
                     type="date"
                     required
-                    defaultValue={new Date().toLocaleDateString("en-CA", {
-                      timeZone: "Asia/Hong_Kong",
-                    })}
+                    defaultValue={
+                      record?.date ||
+                      new Date().toLocaleDateString("en-CA", {
+                        timeZone: "Asia/Hong_Kong",
+                      })
+                    }
                   />
                 </label>
                 <fieldset className="fl-period-field">
@@ -328,33 +377,35 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
                     ))}
                   </div>
                 </fieldset>
-                <LocationInput />
+                <LocationInput initial={record} />
               </div>
             </section>
-            <label className="fl-photo-picker">
-              <input
-                name="photo"
-                required={isNew}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={(event) => void choose(event.target.files?.[0])}
-              />
-              {preview ? (
-                <img src={preview} alt="待儲存的魚相" />
-              ) : (
-                <Camera size={22} />
-              )}
-              <span>
-                <b>{preview ? "更換魚相" : "加入魚相"}</b>
-                <small>
-                  {preparing
-                    ? "處理圖片中…"
-                    : photo
-                      ? `${(photo.size / 1024 / 1024).toFixed(2)} MB · 已準備上傳`
-                      : "相片會自動壓縮"}
-                </small>
-              </span>
-            </label>
+            {!record && (
+              <label className="fl-photo-picker">
+                <input
+                  name="photo"
+                  required={isNew}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(event) => void choose(event.target.files?.[0])}
+                />
+                {preview ? (
+                  <img src={preview} alt="待儲存的魚相" />
+                ) : (
+                  <Camera size={22} />
+                )}
+                <span>
+                  <b>{preview ? "更換魚相" : "加入魚相"}</b>
+                  <small>
+                    {preparing
+                      ? "處理圖片中…"
+                      : photo
+                        ? `${(photo.size / 1024 / 1024).toFixed(2)} MB · 已準備上傳`
+                        : "相片會自動壓縮"}
+                  </small>
+                </span>
+              </label>
+            )}
             <details className="fl-optional-section">
               <summary>釣組裝備</summary>
               {data.gear && (
@@ -407,6 +458,7 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
                 <span className="fl-sr-only">備註</span>
                 <textarea
                   name="note"
+                  defaultValue={record?.note || ""}
                   maxLength={4000}
                   placeholder="補充紀錄…"
                 />
@@ -429,7 +481,13 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
             取消
           </button>
           <button className="fl-primary" disabled={busy || preparing}>
-            {busy ? "儲存中…" : preparing ? "處理圖片中…" : "儲存漁獲"}
+            {busy
+              ? "儲存中…"
+              : preparing
+                ? "處理圖片中…"
+                : record
+                  ? "儲存修改"
+                  : "儲存漁獲"}
           </button>
         </footer>
       </form>
@@ -463,11 +521,19 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
                 <rect x="88" y="24" width="3" height="3" fill="#fcfbf8" />
               </svg>
             </div>
-            <h3>{isNew ? "魚仔準備游入水箱…" : "記低今次漁獲…"}</h3>
+            <h3>
+              {record
+                ? "更新今次漁獲…"
+                : isNew
+                  ? "魚仔準備游入水箱…"
+                  : "記低今次漁獲…"}
+            </h3>
             <p>
-              {isNew
-                ? "正在生成像素魚及儲存紀錄，請稍候。"
-                : "魚相同紀錄儲存中，請稍候。"}
+              {record
+                ? "紀錄更新中，請稍候。"
+                : isNew
+                  ? "正在生成像素魚及儲存紀錄，請稍候。"
+                  : "魚相同紀錄儲存中，請稍候。"}
             </p>
           </div>
         </div>

@@ -3,10 +3,27 @@ import { useEffect, useId, useRef, useState } from "react";
 import { MapPin, LoaderCircle, Check } from "lucide-react";
 import type { Place } from "@/lib/place-search";
 
-export function LocationInput() {
+type InitialLocation = {
+  location: string;
+  latitude?: number;
+  longitude?: number;
+};
+export function LocationInput({ initial }: { initial?: InitialLocation } = {}) {
   const id = useId();
-  const [value, setValue] = useState("");
-  const [selected, setSelected] = useState<Place | null>(null);
+  const [value, setValue] = useState(initial?.location || "");
+  const [selected, setSelected] = useState<Place | null>(() =>
+    initial?.latitude !== undefined && initial.longitude !== undefined
+      ? {
+          id: "stored",
+          name: initial.location,
+          englishName: "",
+          address: "",
+          district: "",
+          latitude: initial.latitude,
+          longitude: initial.longitude,
+        }
+      : null,
+  );
   const [result, setResult] = useState<{
     query: string;
     places: Place[];
