@@ -3148,3 +3148,184 @@ path.fl-rig-piece.is-active {
     animation: none;
   }
 }
+
+/* Keep the showcase scrollable; view changes use explicit buttons. */
+.fl-rig-canvas canvas,
+.fl-rig-canvas canvas:active {
+  cursor: default;
+  touch-action: pan-y pinch-zoom;
+}
+.fl-rig-stage {
+  box-shadow: inset 0 1px 0 #ffffff55;
+}
+.fl-rig-slot {
+  padding: 12px 13px;
+  border: 1px solid var(--fl-border);
+  border-radius: 12px;
+  background: var(--fl-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 18px #1024380a;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.fl-rig-slot.is-active {
+  border-color: var(--fl-blue);
+  box-shadow:
+    0 0 0 2px #278de518,
+    0 6px 22px #10243814;
+}
+.fl-rig-slot:hover {
+  border-color: var(--fl-blue);
+}
+.fl-rig-slot button {
+  min-height: 44px;
+}
+.fl-rig-slot-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+.fl-rig-slot-label i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.fl-rig-slot-value {
+  font-size: 12px;
+  margin-top: 8px;
+}
+.fl-rig-slot input {
+  padding: 10px;
+  border: 1px solid var(--fl-border);
+  border-radius: 7px;
+  background: var(--fl-surface);
+  font-size: 14px;
+}
+.fl-rig-slot input:focus {
+  outline: 2px solid #278de533;
+  outline-offset: 1px;
+  border-color: var(--fl-blue);
+}
+.fl-rig-slot input::placeholder {
+  font-size: 11px;
+}
+@media (max-width: 760px) {
+  .fl-rig-slot {
+    padding: 10px;
+    width: 42%;
+    left: 53%;
+  }
+  .fl-rig-slot-label {
+    font-size: 10px;
+  }
+  .fl-rig-slot input {
+    font-size: 16px;
+    padding: 9px 7px;
+  }
+  .fl-rig-stage-note {
+    font-size: 8px;
+    bottom: 58px;
+  }
+}
+@media (max-width: 760px) {
+  .fl-rig-slot-reel {
+    top: auto;
+    bottom: 68px;
+  }
+}
+
+/* Keep the assembled model in the centre, with attachments on both sides. */
+.fl-rig-slot {
+  width: 21%;
+  max-width: 210px;
+}
+.fl-rig-slot-rod {
+  left: 3%;
+  right: auto;
+  top: 17%;
+}
+.fl-rig-slot-mainLine {
+  left: 3%;
+  right: auto;
+  top: 40%;
+}
+.fl-rig-slot-reel {
+  left: 3%;
+  right: auto;
+  top: 66%;
+  bottom: auto;
+}
+.fl-rig-slot-leaderLine {
+  left: auto;
+  right: 3%;
+  top: 30%;
+}
+.fl-rig-slot-lure {
+  left: auto;
+  right: 3%;
+  top: 61%;
+}
+@media (max-width: 760px) {
+  .fl-rig-slot {
+    width: 30%;
+    max-width: none;
+    padding: 9px 8px;
+  }
+  .fl-rig-slot-rod {
+    left: 2%;
+    right: auto;
+    top: 11%;
+  }
+  .fl-rig-slot-mainLine {
+    left: 2%;
+    right: auto;
+    top: 38%;
+  }
+  .fl-rig-slot-reel {
+    left: 2%;
+    right: auto;
+    top: auto;
+    bottom: 80px;
+  }
+  .fl-rig-slot-leaderLine {
+    left: auto;
+    right: 2%;
+    top: 26%;
+  }
+  .fl-rig-slot-lure {
+    left: auto;
+    right: 2%;
+    top: 55%;
+  }
+  .fl-rig-slot.is-active {
+    width: 42%;
+    z-index: 4;
+  }
+  .fl-rig-slot-label {
+    letter-spacing: 0;
+    gap: 4px;
+  }
+  .fl-rig-slot-label i {
+    width: 4px;
+    height: 4px;
+  }
+  .fl-rig-slot-value {
+    font-size: 11px;
+  }
+}
+
+/* The canvas is a passive display: every pointer and wheel gesture belongs to the page. */
+.fl-rig-canvas,
+.fl-rig-canvas canvas,
+.fl-rig-canvas canvas:active {
+  pointer-events: none;
+  touch-action: auto;
+  cursor: default;
+}
+@media (max-width: 760px) {
+  .fl-rig-stage-note {
+    bottom: 18px;
+  }
+}

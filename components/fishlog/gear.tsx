@@ -92,11 +92,7 @@ export default function Gear({ embedded = false }: { embedded?: boolean }) {
         </header>
         <div className="fl-rig-stage" aria-label="釣竿及配件配置">
           <span className="fl-rig-stage-label">紡車式釣組</span>
-          <LoadoutRig
-            active={hovered ?? active}
-            selected={active}
-            onSelect={setActive}
-          />
+          <LoadoutRig active={hovered ?? active} />
           {gearSlots.map(({ key, label, name }) => (
             <div
               key={key}
@@ -145,7 +141,7 @@ export default function Gear({ embedded = false }: { embedded?: boolean }) {
               )}
             </div>
           ))}
-          <span className="fl-rig-stage-note">拖動旋轉 · 雙指縮放</span>
+          <span className="fl-rig-stage-note">點選配件編輯</span>
         </div>
         <div className="fl-loadout-feedback" role="status">
           {saved && (

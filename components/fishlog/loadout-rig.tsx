@@ -2,33 +2,21 @@
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
 import * as THREE from "three";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { RotateCcw, ZoomIn, ZoomOut } from "lucide-react";
 import { rigAnchors, type RigSlot } from "@/lib/fishing-rig-model";
 const slots = Object.keys(rigAnchors) as RigSlot[];
-export default function LoadoutRig({
-  active,
-  selected,
-  onSelect,
-}: {
-  active: RigSlot | null;
-  selected: RigSlot | null;
-  onSelect: (slot: RigSlot) => void;
-}) {
+export default function LoadoutRig({ active }: { active: RigSlot | null }) {
   const host = useRef<HTMLDivElement>(null);
   const overlay = useRef<SVGSVGElement>(null);
   const controller = useRef<{
     highlight: (slot: RigSlot | null) => void;
-    focus: (slot: RigSlot | null) => void;
-    view: (action: "reset" | "in" | "out") => void;
     theme: (dark: boolean) => void;
   } | null>(null);
-  const latest = useRef({ active, selected, onSelect });
+  const latest = useRef(active);
   useEffect(() => {
-    latest.current = { active, selected, onSelect };
-  }, [active, selected, onSelect]);
+    latest.current = active;
+  }, [active]);
   const { resolvedTheme } = useTheme();
   const [status, setStatus] = useState("正在準備釣組…");
   useEffect(() => {
@@ -37,8 +25,8 @@ export default function LoadoutRig({
     let disposed = false,
       renderer: THREE.WebGLRenderer | undefined,
       rig: THREE.Object3D | undefined;
-    let controls: OrbitControls | undefined,
-      environment: THREE.WebGLRenderTarget | undefined;
+    let environment: THREE.WebGLRenderTarget | undefined;
+    const target = new THREE.Vector3();
     let resize: ResizeObserver | undefined;
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(-8, 8, 5, -5, 0.1, 100);
@@ -52,10 +40,41 @@ export default function LoadoutRig({
     const rim = new THREE.DirectionalLight(0xd6e9ff, 2);
     rim.position.set(4, 1, -5);
     scene.add(rim);
+    key.castShadow = true;
+    key.shadow.mapSize.set(1024, 1024);
+    Object.assign(key.shadow.camera, {
+      left: -8,
+      right: 8,
+      top: 8,
+      bottom: -8,
+      near: 0.1,
+      far: 30,
+    });
+    key.shadow.bias = -0.0005;
+    key.shadow.normalBias = 0.015;
+    key.shadow.camera.updateProjectionMatrix();
+    const backdropMaterial = new THREE.MeshStandardMaterial({
+      color: 0xdfe8f2,
+      roughness: 0.95,
+    });
+    const backdrop = new THREE.Mesh(
+      new THREE.PlaneGeometry(40, 40),
+      backdropMaterial,
+    );
+    backdrop.position.z = -1.6;
+    backdrop.receiveShadow = true;
+    scene.add(backdrop);
+    const grid = new THREE.GridHelper(30, 60, 0xb7cce3, 0xcbd9e9);
+    grid.rotation.x = Math.PI / 2;
+    grid.position.z = -1.59;
+    const gridMaterial = grid.material as THREE.LineBasicMaterial;
+    gridMaterial.transparent = true;
+    gridMaterial.opacity = 0.16;
+    gridMaterial.depthWrite = false;
+    scene.add(grid);
     let mobile = false,
       width = 1,
       height = 1;
-    const raycaster = new THREE.Raycaster();
     const original = new Map<
       THREE.MeshStandardMaterial,
       { color: THREE.Color; opacity: number; emissive: THREE.Color }
@@ -90,20 +109,35 @@ export default function LoadoutRig({
         const circle = overlay.current?.querySelector(
           `[data-anchor="${slot}"]`,
         );
-        const [ex, ey] = ends[slot];
-        path?.setAttribute("d", `M${x} ${y} L${ex * 10} ${ey * 10}`);
+        let [ex, ey] = ends[slot].map((value) => value * 10);
+        const card = element.parentElement?.querySelector<HTMLElement>(
+          `.fl-rig-slot-${slot}`,
+        );
+        if (card) {
+          const box = card.getBoundingClientRect(),
+            stage = element.getBoundingClientRect();
+          if (stage.width && stage.height) {
+            const edge =
+              box.left + box.width / 2 < stage.left + stage.width / 2
+                ? box.right
+                : box.left;
+            ex = ((edge - stage.left) / stage.width) * 1000;
+            ey = ((box.top + 22 - stage.top) / stage.height) * 1000;
+          }
+        }
+        path?.setAttribute("d", `M${x} ${y} L${ex} ${ey}`);
         circle?.setAttribute("cx", String(x));
         circle?.setAttribute("cy", String(y));
       }
     };
     const reset = () => {
-      if (!controls) return;
+      if (!renderer) return;
       root.rotation.set(0, mobile ? -0.18 : -0.25, mobile ? 0 : -0.82);
       camera.position.set(0, 0, 14);
       camera.zoom = 1;
       camera.updateProjectionMatrix();
-      controls.target.set(mobile ? 0.7 : 0.35, 0, 0.1);
-      controls.update();
+      target.set(mobile ? 0.7 : 0.35, 0, 0.1);
+      camera.lookAt(target);
       draw();
     };
     const highlight = (slot: RigSlot | null) => {
@@ -121,56 +155,6 @@ export default function LoadoutRig({
       }
       draw();
     };
-    const focus = (slot: RigSlot | null) => {
-      if (!controls) return;
-      if (!slot || slot === "rod") {
-        reset();
-        return;
-      }
-      root.updateMatrixWorld(true);
-      const target = root.localToWorld(new THREE.Vector3(...rigAnchors[slot]));
-      controls.target.copy(target);
-      camera.position.copy(target).add(new THREE.Vector3(0, 0, 14));
-      camera.zoom =
-        slot === "reel"
-          ? 5
-          : slot === "lure"
-            ? 7
-            : slot === "leaderLine"
-              ? 2.4
-              : 1.7;
-      camera.updateProjectionMatrix();
-      controls.update();
-      draw();
-    };
-    const pointerStart = { x: 0, y: 0 };
-    const down = (event: PointerEvent) => {
-      pointerStart.x = event.clientX;
-      pointerStart.y = event.clientY;
-    };
-    const up = (event: PointerEvent) => {
-      if (
-        !renderer ||
-        !rig ||
-        Math.hypot(
-          event.clientX - pointerStart.x,
-          event.clientY - pointerStart.y,
-        ) > 6
-      )
-        return;
-      const rect = renderer.domElement.getBoundingClientRect();
-      raycaster.setFromCamera(
-        new THREE.Vector2(
-          ((event.clientX - rect.left) / rect.width) * 2 - 1,
-          (-(event.clientY - rect.top) / rect.height) * 2 + 1,
-        ),
-        camera,
-      );
-      const hit = raycaster
-        .intersectObject(rig, true)
-        .find((hit) => hit.object.userData.slot);
-      if (hit) latest.current.onSelect(hit.object.userData.slot as RigSlot);
-    };
     const contextLost = (event: Event) => {
       event.preventDefault();
       setStatus("3D 預覽暫時無法顯示，仍可編輯配件。");
@@ -186,25 +170,18 @@ export default function LoadoutRig({
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.3;
-        renderer.domElement.setAttribute(
-          "aria-label",
-          "可旋轉及縮放的 3D 釣組",
-        );
+        renderer.domElement.setAttribute("aria-label", "靜態 3D 釣組");
         renderer.domElement.setAttribute("role", "img");
         element.appendChild(renderer.domElement);
-        renderer.domElement.addEventListener("pointerdown", down);
-        renderer.domElement.addEventListener("pointerup", up);
         renderer.domElement.addEventListener("webglcontextlost", contextLost);
         renderer.domElement.addEventListener(
           "webglcontextrestored",
           contextRestored,
         );
-        controls = new OrbitControls(camera, renderer.domElement);
-        controls.enablePan = false;
-        controls.enableDamping = false;
-        controls.minZoom = 0.8;
-        controls.maxZoom = 12;
-        controls.addEventListener("change", draw);
+        renderer.domElement.style.touchAction = "auto";
+        renderer.domElement.style.pointerEvents = "none";
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         const pmrem = new THREE.PMREMGenerator(renderer);
         const room = new RoomEnvironment();
         environment = pmrem.fromScene(room, 0.04);
@@ -226,6 +203,9 @@ export default function LoadoutRig({
             parent = parent.parent;
           const slot = object.userData.slot || parent?.name;
           object.userData.slot = slot;
+          object.castShadow =
+            slot === "rod" || slot === "reel" || slot === "lure";
+          object.receiveShadow = true;
           const materials = (
             Array.isArray(object.material) ? object.material : [object.material]
           ).map((material) => {
@@ -265,34 +245,22 @@ export default function LoadoutRig({
           camera.bottom = -viewHeight / 2;
           camera.updateProjectionMatrix();
           renderer.setSize(width, height);
-          if (changed || first) focus(latest.current.selected);
+          if (changed || first) reset();
           else draw();
         });
         resize.observe(element);
         controller.current = {
           highlight,
-          focus,
-          view: (action) => {
-            if (action === "reset") reset();
-            else {
-              camera.zoom = THREE.MathUtils.clamp(
-                camera.zoom * (action === "in" ? 1.5 : 1 / 1.5),
-                0.8,
-                12,
-              );
-              camera.updateProjectionMatrix();
-              draw();
-            }
-          },
           theme: (dark) => {
+            backdropMaterial.color.set(dark ? 0x152333 : 0xdfe8f2);
+            gridMaterial.color.set(dark ? 0x45617d : 0xb7cce3);
             hemi.intensity = dark ? 2.7 : 2;
             key.intensity = dark ? 4 : 3.2;
             draw();
           },
         };
         reset();
-        focus(latest.current.selected);
-        highlight(latest.current.active);
+        highlight(latest.current);
         controller.current.theme(
           document.documentElement.dataset.theme === "dark",
         );
@@ -316,12 +284,13 @@ export default function LoadoutRig({
       disposed = true;
       controller.current = null;
       resize?.disconnect();
-      controls?.dispose();
       releaseRig();
       environment?.dispose();
+      backdrop.geometry.dispose();
+      backdropMaterial.dispose();
+      grid.geometry.dispose();
+      gridMaterial.dispose();
       if (renderer) {
-        renderer.domElement.removeEventListener("pointerdown", down);
-        renderer.domElement.removeEventListener("pointerup", up);
         renderer.domElement.removeEventListener(
           "webglcontextlost",
           contextLost,
@@ -336,7 +305,6 @@ export default function LoadoutRig({
     };
   }, []);
   useEffect(() => controller.current?.highlight(active), [active]);
-  useEffect(() => controller.current?.focus(selected), [selected]);
   useEffect(
     () => controller.current?.theme(resolvedTheme === "dark"),
     [resolvedTheme],
@@ -364,29 +332,6 @@ export default function LoadoutRig({
           {status}
         </div>
       )}
-      <div className="fl-rig-view-controls" role="group" aria-label="3D 視角">
-        <button
-          type="button"
-          onClick={() => controller.current?.view("in")}
-          aria-label="放大釣組"
-        >
-          <ZoomIn size={17} />
-        </button>
-        <button
-          type="button"
-          onClick={() => controller.current?.view("out")}
-          aria-label="縮小釣組"
-        >
-          <ZoomOut size={17} />
-        </button>
-        <button
-          type="button"
-          onClick={() => controller.current?.view("reset")}
-          aria-label="重設釣組視角"
-        >
-          <RotateCcw size={17} />
-        </button>
-      </div>
     </>
   );
 }
