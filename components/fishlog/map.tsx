@@ -1,4 +1,5 @@
 "use client";
+import { useLoading } from "./loading-dialog";
 import { useEffect, useRef, useState } from "react";
 import type { Map as JournalMap, StyleSpecification } from "maplibre-gl";
 import { useTheme } from "next-themes";
@@ -13,7 +14,9 @@ export default function CatchMap() {
   const host = useRef<HTMLDivElement>(null),
     map = useRef<JournalMap | null>(null);
   const [selected, setSelected] = useState(""),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),
+    [fetching, setFetching] = useState(true);
+  useLoading(fetching, "載入釣獲地圖…", 0);
   const locations = [
     ...new Set(
       data.catches
@@ -26,11 +29,12 @@ export default function CatchMap() {
     const abort = new AbortController();
     async function initialize() {
       try {
+        setFetching(true);
         setError("");
         const [M, response] = await Promise.all([
           import("maplibre-gl"),
           fetch("https://tiles.openfreemap.org/styles/positron", {
-            signal: abort.signal,
+            signal: AbortSignal.any([abort.signal, AbortSignal.timeout(15000)]),
           }),
         ]);
         if (!response.ok) throw Error("Map unavailable");
@@ -93,6 +97,8 @@ export default function CatchMap() {
         }
       } catch {
         if (!disposed) setError("地圖未能載入；地點紀錄仍可在下面查看。");
+      } finally {
+        if (!disposed) setFetching(false);
       }
     }
     void initialize();

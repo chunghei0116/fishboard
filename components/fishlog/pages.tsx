@@ -23,11 +23,7 @@ export function Home() {
         species={summarizeSpecies(data.species, data.catches)}
         total={data.catches.length}
       />
-      {loading ? (
-        <p className="fl-loading">讀取紀錄中…</p>
-      ) : (
-        <CatchLog {...data} />
-      )}
+      {loading ? null : <CatchLog {...data} />}
     </>
   );
 }
@@ -70,7 +66,7 @@ export function SpeciesDetail({ id }: { id: string }) {
   const fish = summarizeSpecies(data.species, data.catches).find(
     (s) => s.id === id,
   );
-  if (loading) return <p className="fl-loading">讀取魚種中…</p>;
+  if (loading && !fish) return null;
   if (!fish) return <Missing />;
   return (
     <>
@@ -121,7 +117,7 @@ export function CatchDetail({ id }: { id: string }) {
   const { data, loading } = useFishLog();
   const record = data.catches.find((c) => c.id === id),
     fish = data.species.find((s) => s.id === record?.speciesId);
-  if (loading) return <p className="fl-loading">讀取紀錄中…</p>;
+  if (loading && (!record || !fish)) return null;
   if (!record || !fish) return <Missing />;
   const fields = [
     ["日期", record.date],
@@ -142,13 +138,16 @@ export function CatchDetail({ id }: { id: string }) {
       </Link>
       <div className="fl-detail-heading">
         <h1>{speciesName(fish)}</h1>
-        <button
-          type="button"
-          className="fl-edit-catch"
-          onClick={() => setEditing(true)}
-        >
-          <Pencil size={15} /> 編輯
-        </button>
+        <div className="fl-detail-actions">
+          <button
+            type="button"
+            className="fl-edit-catch"
+            onClick={() => setEditing(true)}
+          >
+            <Pencil size={15} /> 編輯
+          </button>
+          <DeleteCatch id={record.id} name={speciesName(fish)} />
+        </div>
         <Link href={`/species/${fish.id}`}>
           {fish.chineseName && fish.englishName
             ? fish.englishName.toUpperCase()
@@ -185,7 +184,6 @@ export function CatchDetail({ id }: { id: string }) {
           </section>
         </div>
       </div>
-      <DeleteCatch id={record.id} name={speciesName(fish)} />
       {editing && (
         <CatchEditor record={record} onClose={() => setEditing(false)} />
       )}

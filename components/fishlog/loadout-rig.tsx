@@ -1,4 +1,5 @@
 "use client";
+import { useLoading } from "./loading-dialog";
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
 import * as THREE from "three";
@@ -19,6 +20,7 @@ export default function LoadoutRig({ active }: { active: RigSlot | null }) {
   }, [active]);
   const { resolvedTheme } = useTheme();
   const [status, setStatus] = useState("正在準備釣組…");
+  useLoading(status === "正在準備釣組…", "準備釣組…", 0);
   useEffect(() => {
     const element = host.current;
     if (!element) return;
@@ -326,9 +328,8 @@ export default function LoadoutRig({ active }: { active: RigSlot | null }) {
           </g>
         ))}
       </svg>
-      {status && (
+      {status && status !== "正在準備釣組…" && (
         <div className="fl-rig-status" role="status">
-          <span className="fl-rig-loading-dot" />
           {status}
         </div>
       )}

@@ -1,4 +1,5 @@
 "use client";
+import { useLoading } from "./loading-dialog";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
@@ -16,6 +17,7 @@ export default function DeleteCatch({
   const [open, setOpen] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  useLoading(busy, "刪除漁獲…", 2);
   const pending = useRef(false);
   useEffect(() => {
     if (open) dialog.current?.showModal();

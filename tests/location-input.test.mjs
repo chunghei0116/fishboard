@@ -253,6 +253,7 @@ let editorSource = ts.transpileModule(
 ).outputText;
 for (const [key, replacement] of Object.entries({
   "./provider": editorProvider,
+  "./loading-dialog": moduleURL("export function useLoading() {}"),
   "next/navigation": editorRouter,
   "./location-input": moduleURL(src),
   "@/lib/fish-log": editorValidation,

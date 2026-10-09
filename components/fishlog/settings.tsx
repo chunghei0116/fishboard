@@ -1,4 +1,5 @@
 "use client";
+import { useLoading } from "./loading-dialog";
 import { useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { useTheme } from "next-themes";
@@ -12,9 +13,14 @@ const serverSnapshot = () => false;
 export default function Settings() {
   const { user, config, login, logout, data } = useFishLog();
   const { resolvedTheme, setTheme } = useTheme();
-  const mounted = useSyncExternalStore(subscribe, clientSnapshot, serverSnapshot);
+  const mounted = useSyncExternalStore(
+    subscribe,
+    clientSnapshot,
+    serverSnapshot,
+  );
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  useLoading(busy, user ? "登出中…" : "登入中…", 2);
   const speciesCount = new Set(data.catches.map((c) => c.speciesId)).size;
   async function account() {
     setBusy(true);

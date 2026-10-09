@@ -1,4 +1,5 @@
 "use client";
+import { useLoading } from "./loading-dialog";
 import {
   createContext,
   useCallback,
@@ -114,7 +115,7 @@ export function FishLogProvider({ children }: { children: React.ReactNode }) {
                   body: JSON.stringify({ idToken }),
                 });
                 if (!r.ok) {
-                  const result = await r.json() as { error?: string };
+                  const result = (await r.json()) as { error?: string };
                   throw Error(result.error || "未能連接私人帳戶，請重新登入");
                 }
               });
@@ -188,6 +189,7 @@ export function FishLogProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(storageKey, JSON.stringify(next));
     setData(next);
   };
+  useLoading(loading, "讀取釣魚日誌…", 0);
   const resetDemo = () => {
     localStorage.removeItem(storageKey);
     setData(fixture);

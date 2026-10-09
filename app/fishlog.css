@@ -3357,3 +3357,23 @@ path.fl-rig-piece.is-active {
 .fl-detail-heading h1 { min-width: 0; overflow-wrap: anywhere; }
 .fl-detail-heading > a { grid-column: 1 / -1; }
 .fl-edit-catch { white-space: nowrap; }
+
+/* Every modal shares viewport-centred geometry, including mobile Safari. */
+.fl-loading-dialog {
+  inset: 0; margin: auto; padding: 0; width: min(320px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px); overflow: auto; border: 0; border-radius: 18px;
+  background: var(--fl-surface); color: var(--fl-text); box-sizing: border-box;
+}
+.fl-loading-dialog .fl-save-popup { width: 100%; border-radius: inherit; padding: 28px 20px; }
+.fl-loading-dialog::backdrop { background: rgb(7 21 35 / 28%); backdrop-filter: blur(6px); }
+.fl-catch-dialog, .fl-confirm-dialog { inset: 0; margin: auto; width: min(560px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); border-radius: 16px; border-bottom: 1px solid var(--fl-border); box-sizing: border-box; }
+.fl-confirm-dialog { width: min(420px, calc(100vw - 32px)); }
+.fl-dialog-handle { display: none; }
+.fl-detail-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.fl-detail-actions .fl-delete-catch { margin: 0; min-height: 40px; border: 1px solid color-mix(in srgb, #d65566 35%, var(--fl-border)); border-radius: 10px; padding: 9px 15px; background: color-mix(in srgb, #d65566 5%, var(--fl-surface)); }
+@media (max-width: 600px) {
+  .fl-detail-heading { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .fl-detail-actions { grid-row: 3; justify-content: flex-start; }
+  .fl-detail-actions > button { flex: 1; }
+  .fl-catch-dialog, .fl-confirm-dialog { max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); width: calc(100vw - 24px); }
+}

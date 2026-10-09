@@ -1,4 +1,5 @@
 "use client";
+import { useLoading } from "./loading-dialog";
 import { useRef, useState } from "react";
 import { useFishLog } from "./provider";
 import { gearSlots, validateGear, gearChanged } from "@/lib/gear";
@@ -21,6 +22,7 @@ export default function Gear({ embedded = false }: { embedded?: boolean }) {
     [saved, setSaved] = useState(false);
   const pending = useRef(false);
   const equipped = gearSlots.filter(({ key }) => draft[key]?.trim()).length;
+  useLoading(busy, "儲存裝備…", 2);
   async function save(event: React.FormEvent) {
     event.preventDefault();
     if (pending.current || loading || !dirty) return;

@@ -1,4 +1,5 @@
 "use client";
+import { useLoading } from "./loading-dialog";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, Camera, Sun, Moon } from "lucide-react";
@@ -72,11 +73,18 @@ export default function AddCatch({
   const submitting = useRef(false);
   const isNew = speciesId === "new";
   const dialog = useRef<HTMLDialogElement>(null);
+  useLoading(
+    busy || preparing,
+    preparing
+      ? "準備魚相…"
+      : record
+        ? "更新漁獲…"
+        : isNew
+          ? "生成像素魚並儲存…"
+          : "儲存漁獲…",
+    2,
+  );
   const photoSelection = useRef(0);
-  const savingStatus = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (busy) savingStatus.current?.focus({ preventScroll: true });
-  }, [busy]);
   useEffect(() => {
     const element = dialog.current;
     const selection = photoSelection;
@@ -491,53 +499,6 @@ export default function AddCatch({
           </button>
         </footer>
       </form>
-      {busy && (
-        <div className="fl-save-overlay">
-          <div
-            className="fl-save-popup"
-            role="status"
-            aria-live="polite"
-            aria-atomic="true"
-            tabIndex={-1}
-            ref={savingStatus}
-          >
-            <div className="fl-saving-water" aria-hidden="true">
-              <i />
-              <i />
-              <i />
-              <svg
-                className="fl-saving-fish"
-                viewBox="0 0 120 64"
-                shapeRendering="crispEdges"
-              >
-                <path
-                  d="M24 24H36V16H52V12H76V16H92V24H104V40H92V48H76V52H52V48H36V40H24L8 52V12Z"
-                  fill="#278de5"
-                />
-                <path d="M40 36H92V44H76V48H52V44H40Z" fill="#badcef" />
-                <path d="M52 12V4H76V12M52 52V60H76V52" fill="#e5c574" />
-                <path d="M72 28H84V40H72Z" fill="#1673bc" />
-                <rect x="88" y="24" width="8" height="8" fill="#191919" />
-                <rect x="88" y="24" width="3" height="3" fill="#fcfbf8" />
-              </svg>
-            </div>
-            <h3>
-              {record
-                ? "更新今次漁獲…"
-                : isNew
-                  ? "魚仔準備游入水箱…"
-                  : "記低今次漁獲…"}
-            </h3>
-            <p>
-              {record
-                ? "紀錄更新中，請稍候。"
-                : isNew
-                  ? "正在生成像素魚及儲存紀錄，請稍候。"
-                  : "魚相同紀錄儲存中，請稍候。"}
-            </p>
-          </div>
-        </div>
-      )}
     </dialog>
   );
 }

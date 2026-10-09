@@ -3,6 +3,7 @@ import "./globals.css";
 import "./fishlog.css";
 import { FishLogProvider } from "@/components/fishlog/provider";
 import { JournalTheme } from "@/components/fishlog/theme";
+import { LoadingProvider } from "@/components/fishlog/loading-dialog";
 import Shell from "@/components/fishlog/shell";
 export const viewport: Viewport = {
   width: "device-width",
@@ -23,9 +24,11 @@ export default function RootLayout({
     <html lang="zh-HK" suppressHydrationWarning>
       <body>
         <JournalTheme>
-          <FishLogProvider>
-            <Shell>{children}</Shell>
-          </FishLogProvider>
+          <LoadingProvider>
+            <FishLogProvider>
+              <Shell>{children}</Shell>
+            </FishLogProvider>
+          </LoadingProvider>
         </JournalTheme>
       </body>
     </html>

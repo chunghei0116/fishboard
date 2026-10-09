@@ -1,10 +1,12 @@
 "use client";
+import { useLoading } from "./loading-dialog";
 import { useState } from "react";
 import { useFishLog } from "./provider";
 export default function Landing() {
   const { login, loading, config, error } = useFishLog();
   const [busy, setBusy] = useState(false),
     [loginError, setLoginError] = useState("");
+  useLoading(busy, "登入中…", 2);
   async function signIn() {
     setBusy(true);
     setLoginError("");
