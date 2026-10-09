@@ -2748,3 +2748,279 @@ path.fl-rig-piece.is-active {
     letter-spacing: 0.07em;
   }
 }
+
+/* A personal fishing credential, followed by the assembled tackle and preferences. */
+.fl-angler-profile {
+  max-width: 940px;
+  margin: 28px auto 0;
+}
+.fl-fishing-license {
+  max-width: 740px;
+  margin: 0 auto 54px;
+  border: 1px solid var(--fl-border);
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--fl-surface);
+}
+.fl-license-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--fl-border);
+}
+.fl-license-header h1 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+}
+.fl-license-header > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--fl-muted);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+.fl-license-header svg {
+  color: var(--fl-blue);
+}
+.fl-license-body {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr);
+  align-items: center;
+  gap: 32px;
+  padding: 28px;
+}
+.fl-license-portrait {
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #edf3f9;
+  border: 1px solid var(--fl-border);
+}
+.fl-license-portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.fl-license-holder {
+  min-width: 0;
+}
+.fl-license-label {
+  color: var(--fl-muted);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+}
+.fl-license-holder h2 {
+  margin: 8px 0 24px;
+  font-size: clamp(18px, 3vw, 27px);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+.fl-license-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.fl-license-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.fl-license-stats > div + div {
+  border-left: 1px solid var(--fl-border);
+  padding-left: 24px;
+}
+.fl-license-stats strong {
+  font: 500 32px var(--fl-mono);
+  color: var(--fl-blue);
+}
+.fl-license-stats span {
+  font-size: 11px;
+  color: var(--fl-muted);
+}
+.fl-license-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 28px;
+  border-top: 1px solid var(--fl-border);
+  color: var(--fl-muted);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+.fl-license-footer span:last-child {
+  color: var(--fl-blue);
+}
+.fl-profile-loadout {
+  scroll-margin-top: 24px;
+}
+.fl-profile-loadout .fl-page-heading {
+  margin: 0 0 20px;
+}
+.fl-profile-loadout h2,
+.fl-profile-preferences h2 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 500;
+}
+.fl-profile-preferences {
+  margin: 48px 0 30px;
+}
+.fl-profile-preferences h2 {
+  margin-bottom: 20px;
+}
+.fl-preference-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 82px;
+  padding: 16px 0;
+  border-top: 1px solid var(--fl-border);
+  font-size: 13px;
+}
+.fl-preference-row > div {
+  min-width: 0;
+}
+.fl-preference-row small {
+  display: block;
+  margin-top: 6px;
+  color: var(--fl-muted);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.fl-theme-options {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--fl-border);
+  border-radius: 30px;
+  background: var(--fl-glass);
+}
+.fl-theme-options button {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 17px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 24px;
+  background: transparent;
+  color: var(--fl-muted);
+  cursor: pointer;
+  font-size: 12px;
+}
+.fl-theme-options button[aria-pressed="true"] {
+  background: var(--fl-glass-active);
+  color: var(--fl-blue);
+}
+.fl-preference-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 11px 16px;
+  min-height: 44px;
+  border: 1px solid var(--fl-border);
+  border-radius: 24px;
+  background: var(--fl-surface);
+  color: var(--fl-text);
+  cursor: pointer;
+  font-size: 12px;
+}
+.fl-preference-action:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.fl-preference-action:hover {
+  border-color: var(--fl-blue);
+}
+.fl-theme-options button:focus-visible,
+.fl-preference-action:focus-visible {
+  outline: 2px solid var(--fl-blue);
+  outline-offset: 3px;
+}
+@media (max-width: 650px) {
+  .fl-angler-profile {
+    margin-top: 18px;
+  }
+  .fl-fishing-license {
+    margin-bottom: 36px;
+    border-radius: 16px;
+  }
+  .fl-license-header {
+    padding: 16px 18px;
+  }
+  .fl-license-header h1 {
+    font-size: 18px;
+  }
+  .fl-license-header > span {
+    font-size: 10px;
+  }
+  .fl-license-body {
+    grid-template-columns: 94px minmax(0, 1fr);
+    gap: 18px;
+    padding: 22px 18px;
+  }
+  .fl-license-holder h2 {
+    font-size: 18px;
+    margin: 5px 0 16px;
+  }
+  .fl-license-stats {
+    gap: 10px;
+  }
+  .fl-license-stats strong {
+    font-size: 25px;
+  }
+  .fl-license-stats > div + div {
+    padding-left: 12px;
+  }
+  .fl-license-stats span {
+    font-size: 10px;
+  }
+  .fl-license-footer {
+    padding: 13px 18px;
+    font-size: 9px;
+  }
+  .fl-profile-loadout h2,
+  .fl-profile-preferences h2 {
+    font-size: 19px;
+  }
+  .fl-profile-preferences {
+    margin-top: 32px;
+  }
+  .fl-preference-row {
+    gap: 12px;
+  }
+  .fl-theme-options button {
+    padding: 10px 13px;
+  }
+}
+@media (max-width: 360px) {
+  .fl-license-body {
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 12px;
+    padding: 18px 14px;
+  }
+  .fl-license-stats {
+    gap: 6px;
+  }
+  .fl-license-stats > div + div {
+    padding-left: 8px;
+  }
+  .fl-license-holder h2 {
+    font-size: 16px;
+  }
+  .fl-license-footer {
+    letter-spacing: 0;
+    padding: 12px 14px;
+  }
+}

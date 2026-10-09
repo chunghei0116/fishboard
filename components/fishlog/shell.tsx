@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Settings, House, Grid2X2, MapPin, Backpack } from "lucide-react";
+import { Settings, House, Grid2X2, MapPin } from "lucide-react";
 import { useFishLog } from "./provider";
 import { ThemeSwitch } from "./theme";
 import Landing from "./landing";
@@ -34,16 +34,6 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </Link>
           <ThemeSwitch />
         </div>
-        {user && (
-          <Link
-            href="/settings"
-            className="fl-settings-link"
-            aria-label="設定"
-            aria-current={path === "/settings" ? "page" : undefined}
-          >
-            <Settings size={19} />
-          </Link>
-        )}
       </header>
       {user ? (
         <>
@@ -52,7 +42,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
               { href: "/", label: "首頁", Icon: House },
               { href: "/collection", label: "圖鑑", Icon: Grid2X2 },
               { href: "/map", label: "地圖", Icon: MapPin },
-              { href: "/gear", label: "裝備", Icon: Backpack },
+              { href: "/settings", label: "設定", Icon: Settings },
             ].map(({ href, label, Icon }) => (
               <Link
                 key={href}

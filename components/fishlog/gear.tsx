@@ -7,7 +7,7 @@ import { Check, LoaderCircle, Save } from "lucide-react";
 import type { GearProfile } from "@/data/types";
 type Slot = Exclude<keyof GearProfile, "name">;
 const emptyLoadout: GearProfile = { name: "我的岸釣裝備" };
-export default function Gear() {
+export default function Gear({ embedded = false }: { embedded?: boolean }) {
   const { data, loading, demo, saveDemo, refresh, user } = useFishLog();
   const [edited, setEdited] = useState<GearProfile | null>(null);
   const baseline = data.gear ?? emptyLoadout;
@@ -57,9 +57,15 @@ export default function Gear() {
   return (
     <>
       <div className="fl-page-heading">
-        <h1>
-          裝備配置<span className="fl-heading-count">{equipped}/5</span>
-        </h1>
+        {embedded ? (
+          <h2>
+            裝備配置<span className="fl-heading-count">{equipped}/5</span>
+          </h2>
+        ) : (
+          <h1>
+            裝備配置<span className="fl-heading-count">{equipped}/5</span>
+          </h1>
+        )}
       </div>
       <form className="fl-loadout" onSubmit={(event) => void save(event)}>
         <header className="fl-loadout-profile">

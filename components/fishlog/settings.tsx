@@ -1,11 +1,21 @@
 "use client";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
+import Image from "next/image";
+import { useTheme } from "next-themes";
+import { Download, LogOut, Moon, Sun, Waves } from "lucide-react";
 import { useFishLog } from "./provider";
+import Gear from "./gear";
+const subscribe = () => () => {};
+const clientSnapshot = () => true;
+const serverSnapshot = () => false;
+
 export default function Settings() {
-  const { demo, user, config, login, logout, data, resetDemo } = useFishLog();
-  const [error, setError] = useState(""),
-    [busy, setBusy] = useState(false),
-    [confirmReset, setConfirmReset] = useState(false);
+  const { user, config, login, logout, data } = useFishLog();
+  const { resolvedTheme, setTheme } = useTheme();
+  const mounted = useSyncExternalStore(subscribe, clientSnapshot, serverSnapshot);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const speciesCount = new Set(data.catches.map((c) => c.speciesId)).size;
   async function account() {
     setBusy(true);
     setError("");
@@ -29,83 +39,111 @@ export default function Settings() {
     URL.revokeObjectURL(url);
   }
   return (
-    <div className="fl-settings">
-      <div className="fl-page-heading">
-        <h1>設定</h1>
-      </div>
-      {error && (
-        <p className="fl-error" role="alert">
-          {error}
-        </p>
-      )}
-      <section className="fl-settings-section">
-        <h2>{user ? user.displayName || "私人帳戶" : "私人日誌"}</h2>
-        <p>
-          {user
-            ? user.email
-            : config?.firebase
-              ? "Google 登入後只會顯示你自己嘅紀錄。示範資料唔會自動匯入帳戶。"
-              : "私人登入尚未開啟。目前係示範模式，新增紀錄只保存喺呢個瀏覽器。"}
-        </p>
-        <button
-          className="fl-primary"
-          onClick={() => void account()}
-          disabled={busy || !config?.firebase}
-        >
-          {busy ? "連接中…" : user ? "登出" : "Google 登入"}
-        </button>
-      </section>
-      <section className="fl-settings-section">
-        <h2>你的紀錄</h2>
-        <p>
-          {data.catches.length} 筆漁獲 ·{" "}
-          {new Set(data.catches.map((c) => c.speciesId)).size} 個魚種
-        </p>
-        <button className="fl-secondary" onClick={exportData}>
-          匯出備份
-        </button>
-        {demo && (
-          <button
-            className="fl-secondary"
-            onClick={() => setConfirmReset((v) => !v)}
-          >
-            還原示範紀錄
-          </button>
-        )}
-        {confirmReset && (
-          <div>
-            <p>會移除呢個瀏覽器新增嘅示範紀錄。可先匯出備份。</p>
-            <button
-              className="fl-secondary"
-              onClick={() => {
-                resetDemo();
-                setConfirmReset(false);
-              }}
-            >
-              確認還原
-            </button>
+    <div className="fl-settings fl-angler-profile">
+      <section className="fl-fishing-license" aria-labelledby="license-title">
+        <header className="fl-license-header">
+          <h1 id="license-title">釣魚證</h1>
+          <span>
+            <Waves size={16} aria-hidden="true" />
+            釣魚日誌
+          </span>
+        </header>
+        <div className="fl-license-body">
+          <div className="fl-license-portrait">
+            <Image
+              src="/images/angler-avatar.png"
+              alt="戴著藍色帽子的可愛卡通男性釣手"
+              width={360}
+              height={360}
+              priority
+            />
           </div>
-        )}
-      </section>
-      <section className="fl-settings-section">
-        <h2>服務狀態</h2>
-        <div className="fl-status-list">
-          <div>
-            私人登入
-            <span>{config?.firebase ? "已就緒" : "未設定"}</span>
-          </div>
-          <div>
-            相片儲存
-            <span>{config?.storageReady ? "已就緒" : "未設定"}</span>
-          </div>
-          <div>
-            像素魚生成
-            <span>{config?.generationReady ? "已就緒" : "未設定"}</span>
+          <div className="fl-license-holder">
+            <span className="fl-license-label">釣手</span>
+            <h2>{user?.displayName || "釣魚日誌會員"}</h2>
+            <div className="fl-license-stats">
+              <div>
+                <strong>{speciesCount}</strong>
+                <span>已記錄魚種</span>
+              </div>
+              <div>
+                <strong>{data.catches.length}</strong>
+                <span>總釣數</span>
+              </div>
+            </div>
           </div>
         </div>
-        <p>
-          未設定的服務需要由網站擁有人接上。你仍可先瀏覽示範魚種與 漁獲紀錄。
-        </p>
+        <footer className="fl-license-footer">
+          <span>我的水域，我的漁獲。</span>
+          <span>個人紀錄證</span>
+        </footer>
+      </section>
+
+      <section
+        id="loadout"
+        className="fl-profile-loadout"
+        aria-label="裝備配置"
+      >
+        <Gear embedded />
+      </section>
+
+      <section
+        className="fl-profile-preferences"
+        aria-labelledby="preferences-title"
+      >
+        <h2 id="preferences-title">設定</h2>
+        <div className="fl-preference-row fl-preference-theme">
+          <span>外觀主題</span>
+          <div className="fl-theme-options" role="group" aria-label="外觀主題">
+            <button
+              type="button"
+              aria-pressed={mounted && resolvedTheme === "light"}
+              onClick={() => setTheme("light")}
+            >
+              <Sun size={16} aria-hidden="true" />
+              淺色
+            </button>
+            <button
+              type="button"
+              aria-pressed={mounted && resolvedTheme === "dark"}
+              onClick={() => setTheme("dark")}
+            >
+              <Moon size={16} aria-hidden="true" />
+              深色
+            </button>
+          </div>
+        </div>
+        <div className="fl-preference-row">
+          <span>紀錄備份</span>
+          <button
+            type="button"
+            className="fl-preference-action"
+            onClick={exportData}
+          >
+            <Download size={16} aria-hidden="true" />
+            匯出備份
+          </button>
+        </div>
+        <div className="fl-preference-row fl-preference-account">
+          <div>
+            <span>帳戶</span>
+            <small>{user?.email || "私人日誌"}</small>
+          </div>
+          <button
+            type="button"
+            className="fl-preference-action"
+            onClick={() => void account()}
+            disabled={busy || !config?.firebase}
+          >
+            <LogOut size={16} aria-hidden="true" />
+            {busy ? "連接中…" : user ? "登出" : "Google 登入"}
+          </button>
+        </div>
+        {error && (
+          <p className="fl-error" role="alert">
+            {error}
+          </p>
+        )}
       </section>
     </div>
   );

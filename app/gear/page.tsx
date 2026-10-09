@@ -1,4 +1,4 @@
-import Gear from "@/components/fishlog/gear";
+import { redirect } from "next/navigation";
 export default function Page() {
-  return <Gear />;
+  redirect("/settings#loadout");
 }
