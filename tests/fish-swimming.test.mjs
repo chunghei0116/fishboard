@@ -56,3 +56,25 @@ test("profiles are deterministic, travel continuously and turn according to velo
   }
   assert.equal(signs.size, 2);
 });
+
+test("left-normalized fish face their travel direction, including the first real fish", () => {
+  for (const id of [
+    "841964f5-a59e-4336-a6ea-8b5163bba1ff",
+    "e490df4d-6101-45d0-ab92-4b8bd2d3cce1",
+  ]) {
+    const profile = api.swimProfile(id, 0);
+    let facing = 1;
+    const observed = new Set();
+    for (let time = 0; time < 130; time += 0.1) {
+      const position = api.swimPosition(profile, time, 1120, 460, 130, 84);
+      facing = api.swimFacing(position.velocity, facing);
+      if (Math.abs(position.velocity) >= 0.0001) {
+        assert.equal(facing, position.velocity > 0 ? -1 : 1);
+        observed.add(facing);
+      }
+    }
+    assert.equal(observed.size, 2);
+  }
+  assert.equal(api.swimFacing(0, -1), -1);
+  assert.equal(api.swimFacing(0, 1), 1);
+});

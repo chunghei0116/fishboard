@@ -1,346 +1,392 @@
-import { useId } from "react";
-import type { GearProfile } from "@/data/types";
-type Slot = Exclude<keyof GearProfile, "name">;
-/** An assembled spinning setup: the callouts follow the actual attachment points. */
+"use client";
+import { useEffect, useRef, useState } from "react";
+import { useTheme } from "next-themes";
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { RotateCcw, ZoomIn, ZoomOut } from "lucide-react";
+import { rigAnchors, type RigSlot } from "@/lib/fishing-rig-model";
+const slots = Object.keys(rigAnchors) as RigSlot[];
 export default function LoadoutRig({
-  mobile,
   active,
+  selected,
+  onSelect,
 }: {
-  mobile?: boolean;
-  active: Slot | null;
+  active: RigSlot | null;
+  selected: RigSlot | null;
+  onSelect: (slot: RigSlot) => void;
 }) {
-  const id = useId().replaceAll(":", "");
-  const fill = (name: string) => `url(#${id}-${name})`;
-  const piece = (slot: Slot) =>
-    `fl-rig-piece${active === slot ? " is-active" : ""}`;
-  return (
-    <svg
-      className={
-        mobile
-          ? "fl-rig-art fl-rig-art-mobile"
-          : "fl-rig-art fl-rig-art-desktop"
+  const host = useRef<HTMLDivElement>(null);
+  const overlay = useRef<SVGSVGElement>(null);
+  const controller = useRef<{
+    highlight: (slot: RigSlot | null) => void;
+    focus: (slot: RigSlot | null) => void;
+    view: (action: "reset" | "in" | "out") => void;
+    theme: (dark: boolean) => void;
+  } | null>(null);
+  const latest = useRef({ active, selected, onSelect });
+  useEffect(() => {
+    latest.current = { active, selected, onSelect };
+  }, [active, selected, onSelect]);
+  const { resolvedTheme } = useTheme();
+  const [status, setStatus] = useState("正在準備釣組…");
+  useEffect(() => {
+    const element = host.current;
+    if (!element) return;
+    let disposed = false,
+      renderer: THREE.WebGLRenderer | undefined,
+      rig: THREE.Object3D | undefined;
+    let controls: OrbitControls | undefined,
+      environment: THREE.WebGLRenderTarget | undefined;
+    let resize: ResizeObserver | undefined;
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-8, 8, 5, -5, 0.1, 100);
+    const root = new THREE.Group();
+    scene.add(root);
+    const hemi = new THREE.HemisphereLight(0xe3efff, 0x526176, 2);
+    scene.add(hemi);
+    const key = new THREE.DirectionalLight(0xffffff, 3.2);
+    key.position.set(-4, 6, 7);
+    scene.add(key);
+    const rim = new THREE.DirectionalLight(0xd6e9ff, 2);
+    rim.position.set(4, 1, -5);
+    scene.add(rim);
+    let mobile = false,
+      width = 1,
+      height = 1;
+    const raycaster = new THREE.Raycaster();
+    const original = new Map<
+      THREE.MeshStandardMaterial,
+      { color: THREE.Color; opacity: number; emissive: THREE.Color }
+    >();
+    const loadedMaterials = new Set<THREE.Material>();
+    const draw = () => {
+      if (disposed || !renderer) return;
+      root.updateMatrixWorld(true);
+      renderer.render(scene, camera);
+      const ends = mobile
+        ? {
+            rod: [54, 17],
+            reel: [54, 86],
+            mainLine: [54, 34],
+            leaderLine: [54, 50],
+            lure: [54, 66],
+          }
+        : {
+            rod: [25, 24],
+            reel: [23, 71],
+            mainLine: [76, 22],
+            leaderLine: [80, 60],
+            lure: [62, 88],
+          };
+      for (const slot of slots) {
+        const point = root
+          .localToWorld(new THREE.Vector3(...rigAnchors[slot]))
+          .project(camera);
+        const x = (point.x + 1) * 500,
+          y = (1 - point.y) * 500;
+        const path = overlay.current?.querySelector(`[data-lead="${slot}"]`);
+        const circle = overlay.current?.querySelector(
+          `[data-anchor="${slot}"]`,
+        );
+        const [ex, ey] = ends[slot];
+        path?.setAttribute("d", `M${x} ${y} L${ex * 10} ${ey * 10}`);
+        circle?.setAttribute("cx", String(x));
+        circle?.setAttribute("cy", String(y));
       }
-      viewBox={mobile ? "0 0 420 840" : "0 0 1000 620"}
-      data-active={active || ""}
-      aria-hidden="true"
-    >
-      <defs>
-        <linearGradient
-          id={`${id}-blank`}
-          x1="0"
-          y1="0"
-          x2="0"
-          y2="1"
-          gradientUnits="objectBoundingBox"
-        >
-          <stop stopColor="#8c9eae" />
-          <stop offset=".2" stopColor="#354b5f" />
-          <stop offset=".6" stopColor="#172535" />
-          <stop offset="1" stopColor="#587186" />
-        </linearGradient>
-        <linearGradient id={`${id}-metal`} x1="0" y1="0" x2="1" y2="1">
-          <stop stopColor="#eff5fa" />
-          <stop offset=".2" stopColor="#9badbc" />
-          <stop offset=".45" stopColor="#e1ebf3" />
-          <stop offset=".7" stopColor="#596f82" />
-          <stop offset="1" stopColor="#b7c9d7" />
-        </linearGradient>
-        <linearGradient id={`${id}-grip`} x1="0" y1="0" x2="0" y2="1">
-          <stop stopColor="#465869" />
-          <stop offset=".45" stopColor="#273645" />
-          <stop offset="1" stopColor="#111c28" />
-        </linearGradient>
-        <linearGradient id={`${id}-lure`} x1="0" y1="0" x2="1" y2="0">
-          <stop stopColor="#466880" />
-          <stop offset=".45" stopColor="#52a5dc" />
-          <stop offset=".55" stopColor="#cce6f5" />
-          <stop offset="1" stopColor="#f2f7fb" />
-        </linearGradient>
-        <pattern
-          id={`${id}-carbon`}
-          width="6"
-          height="6"
-          patternUnits="userSpaceOnUse"
-        >
-          <path
-            d="m0 0 6 6M-3 3l6 6M3-3l6 6"
-            stroke="#a6bbc7"
-            strokeOpacity=".15"
-            strokeWidth="1"
-          />
-        </pattern>
-      </defs>
-      <g className="fl-rig-leads" fill="none" strokeWidth="1">
-        {Object.entries(
-          mobile
-            ? {
-                rod: "M88 410 179 100h41",
-                reel: "m113 618 60 60h47",
-                mainLine: "m126 233 68 16h26",
-                leaderLine: "M160 384h60",
-                lure: "M165 516h55",
-              }
-            : {
-                rod: "M458 287 285 136H215",
-                reel: "M370 400H275l-28 20h-50",
-                mainLine: "m644 153 84-37h46",
-                leaderLine: "M775 352h44",
-                lure: "m783 462-45 74h-32",
-              },
-        ).map(([slot, path]) => (
-          <path
-            key={slot}
-            d={path}
-            className={`fl-rig-lead${active === slot ? " is-active" : ""}`}
-          />
-        ))}
-      </g>
-      <g
-        transform={
-          mobile
-            ? "translate(76 745) rotate(-88) scale(.97)"
-            : "translate(235 445) rotate(-36)"
+    };
+    const reset = () => {
+      if (!controls) return;
+      root.rotation.set(0, mobile ? -0.18 : -0.25, mobile ? 0 : -0.82);
+      camera.position.set(0, 0, 14);
+      camera.zoom = 1;
+      camera.updateProjectionMatrix();
+      controls.target.set(mobile ? 0.7 : 0.35, 0, 0.1);
+      controls.update();
+      draw();
+    };
+    const highlight = (slot: RigSlot | null) => {
+      for (const [mat, base] of original) {
+        mat.color.copy(base.color);
+        mat.emissive.copy(base.emissive);
+        mat.opacity = slot && mat.userData.slot !== slot ? 0.24 : base.opacity;
+        mat.transparent = mat.opacity < 1;
+        mat.depthWrite = mat.opacity === 1;
+        if (slot && mat.userData.slot === slot) {
+          mat.emissive.set(0x0c4986);
+          mat.emissiveIntensity = 0.65;
         }
-      >
-        <g className={piece("rod")}>
-          <path
-            d="M0-8 145-6 610-1.3v2.6L145 6 0 8Z"
-            fill={fill("blank")}
-            stroke="#192c3e"
-            strokeWidth=".7"
-          />
-          <path d="M145-6 610-1.3v2.6L145 6Z" fill={fill("carbon")} />
-          <path
-            d="m148-4.5 454 3.6"
-            stroke="#bed1de"
-            strokeOpacity=".55"
-            strokeWidth=".7"
-          />
-          <rect
-            x="0"
-            y="-11"
-            width="61"
-            height="22"
-            rx="6"
-            fill={fill("grip")}
-            stroke="#172638"
-          />
-          <path
-            d="M6-9v18M13-9v18M20-9v18M27-9v18M34-9v18M41-9v18M48-9v18M55-9v18"
-            stroke="#7d96a9"
-            strokeOpacity=".18"
-          />
-          <rect
-            x="-3"
-            y="-10"
-            width="7"
-            height="20"
-            rx="2"
-            fill={fill("metal")}
-          />
-          <rect
-            x="75"
-            y="-8"
-            width="43"
-            height="16"
-            rx="3"
-            fill={fill("grip")}
-          />
-          <path
-            d="M78-8v16M83-8v16M110-8v16M115-8v16"
-            stroke="#758b9c"
-            strokeWidth="1.5"
-          />
-          <rect
-            x="120"
-            y="-8"
-            width="34"
-            height="16"
-            rx="4"
-            fill={fill("grip")}
-          />
-          <rect
-            x="160"
-            y="-5.5"
-            width="16"
-            height="11"
-            rx="1"
-            fill={fill("metal")}
-          />
-          <path d="M182-5v10M187-5v10" stroke="#278de5" strokeWidth="2" />
-          <g fill="none" stroke={fill("metal")} strokeWidth="1.7">
-            {[210, 330, 435, 525, 586].map((x, i) => (
-              <g key={x}>
-                <path d={`M${x - 8} ${-5 + i * 0.6}l8-10 8 10`} />
-                <ellipse
-                  cx={x}
-                  cy={-14 + i}
-                  rx={6 - i * 0.7}
-                  ry={8 - i * 0.9}
-                />
-              </g>
-            ))}
-          </g>
-        </g>
-        <g className={piece("reel")}>
-          <path
-            d="M101 7h13l25 41-7 6-25-33Z"
-            fill={fill("metal")}
-            stroke="#667f94"
-          />
-          <path
-            d="M114 49 99 40 86 44"
-            fill="none"
-            stroke="#879eaf"
-            strokeWidth="5"
-          />
-          <rect
-            x="74"
-            y="38"
-            width="17"
-            height="13"
-            rx="5"
-            fill={fill("grip")}
-            stroke="#7c93a5"
-          />
-          <path
-            d="M128 36c-18 2-21 28-9 37l25 3 17-16-9-19Z"
-            fill={fill("blank")}
-            stroke="#869bab"
-          />
-          <circle
-            cx="137"
-            cy="56"
-            r="15"
-            fill={fill("grip")}
-            stroke="#9eb3c3"
-            strokeWidth="1.5"
-          />
-          <circle cx="137" cy="56" r="8" fill={fill("metal")} />
-          <circle cx="137" cy="56" r="4" fill="#278de5" />
-          <path d="M150 45h30v18h-30Z" fill={fill("metal")} stroke="#849dab" />
-          <ellipse
-            cx="180"
-            cy="54"
-            rx="8"
-            ry="12"
-            fill={fill("grip")}
-            stroke="#c4d6e3"
-            strokeWidth="2"
-          />
-          <path
-            d="M150 48h23m-23 4h25m-25 4h25m-25 4h23"
-            stroke="#59aaa9"
-            strokeWidth="2"
-          />
-          <path
-            d="M135 39c-6-28 38-31 50-2l2 26"
-            fill="none"
-            stroke="#c7d5df"
-            strokeWidth="2.5"
-          />
-          <path d="M148 35h29" stroke="#278de5" strokeWidth="2" />
-        </g>
-        <path
-          className={piece("mainLine")}
-          d="m175 46 35-60 120 1 105 1 90 1 61 1 25 5"
-          fill="none"
-          stroke="#51a6a4"
-          strokeWidth="1.1"
-        />
-      </g>
-      <g className={piece("mainLine")}>
-        <path
-          d={mobile ? "M97 154Q147 227 160 377" : "M727 85Q775 210 777 345"}
-          fill="none"
-          stroke="#51a6a4"
-          strokeWidth="1.2"
-        />
-      </g>
-      <g className={piece("leaderLine")}>
-        <path
-          d={mobile ? "M160 384v112" : "M777 352v79"}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.2"
-          strokeOpacity=".6"
-        />
-        <g
-          transform={mobile ? "translate(160 379)" : "translate(777 347)"}
-          fill="none"
-          stroke="#51a6a4"
-          strokeWidth="1.5"
-        >
-          <path d="m-3-3 6 6m-6-3 6 6m-6-3 6 6" />
-        </g>
-      </g>
-      <g
-        className={piece("lure")}
-        transform={
-          mobile
-            ? "translate(160 499) rotate(12)"
-            : "translate(777 433) rotate(12)"
+        mat.needsUpdate = true;
+      }
+      draw();
+    };
+    const focus = (slot: RigSlot | null) => {
+      if (!controls) return;
+      if (!slot || slot === "rod") {
+        reset();
+        return;
+      }
+      root.updateMatrixWorld(true);
+      const target = root.localToWorld(new THREE.Vector3(...rigAnchors[slot]));
+      controls.target.copy(target);
+      camera.position.copy(target).add(new THREE.Vector3(0, 0, 14));
+      camera.zoom =
+        slot === "reel"
+          ? 5
+          : slot === "lure"
+            ? 7
+            : slot === "leaderLine"
+              ? 2.4
+              : 1.7;
+      camera.updateProjectionMatrix();
+      controls.update();
+      draw();
+    };
+    const pointerStart = { x: 0, y: 0 };
+    const down = (event: PointerEvent) => {
+      pointerStart.x = event.clientX;
+      pointerStart.y = event.clientY;
+    };
+    const up = (event: PointerEvent) => {
+      if (
+        !renderer ||
+        !rig ||
+        Math.hypot(
+          event.clientX - pointerStart.x,
+          event.clientY - pointerStart.y,
+        ) > 6
+      )
+        return;
+      const rect = renderer.domElement.getBoundingClientRect();
+      raycaster.setFromCamera(
+        new THREE.Vector2(
+          ((event.clientX - rect.left) / rect.width) * 2 - 1,
+          (-(event.clientY - rect.top) / rect.height) * 2 + 1,
+        ),
+        camera,
+      );
+      const hit = raycaster
+        .intersectObject(rig, true)
+        .find((hit) => hit.object.userData.slot);
+      if (hit) latest.current.onSelect(hit.object.userData.slot as RigSlot);
+    };
+    const contextLost = (event: Event) => {
+      event.preventDefault();
+      setStatus("3D 預覽暫時無法顯示，仍可編輯配件。");
+    };
+    const contextRestored = () => {
+      setStatus("");
+      draw();
+    };
+    void (async () => {
+      try {
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.3;
+        renderer.domElement.setAttribute(
+          "aria-label",
+          "可旋轉及縮放的 3D 釣組",
+        );
+        renderer.domElement.setAttribute("role", "img");
+        element.appendChild(renderer.domElement);
+        renderer.domElement.addEventListener("pointerdown", down);
+        renderer.domElement.addEventListener("pointerup", up);
+        renderer.domElement.addEventListener("webglcontextlost", contextLost);
+        renderer.domElement.addEventListener(
+          "webglcontextrestored",
+          contextRestored,
+        );
+        controls = new OrbitControls(camera, renderer.domElement);
+        controls.enablePan = false;
+        controls.enableDamping = false;
+        controls.minZoom = 0.8;
+        controls.maxZoom = 12;
+        controls.addEventListener("change", draw);
+        const pmrem = new THREE.PMREMGenerator(renderer);
+        const room = new RoomEnvironment();
+        environment = pmrem.fromScene(room, 0.04);
+        scene.environment = environment.texture;
+        room.dispose();
+        pmrem.dispose();
+        const result = await new GLTFLoader().loadAsync(
+          "/models/fishing-rig.glb",
+        );
+        rig = result.scene;
+        if (disposed) {
+          releaseRig();
+          return;
         }
+        rig.traverse((object) => {
+          if (!(object instanceof THREE.Mesh)) return;
+          let parent: THREE.Object3D | null = object;
+          while (parent && !slots.includes(parent.name as RigSlot))
+            parent = parent.parent;
+          const slot = object.userData.slot || parent?.name;
+          object.userData.slot = slot;
+          const materials = (
+            Array.isArray(object.material) ? object.material : [object.material]
+          ).map((material) => {
+            const mat = material.clone() as THREE.MeshStandardMaterial;
+            mat.userData.slot = slot;
+            original.set(mat, {
+              color: mat.color.clone(),
+              opacity: mat.opacity,
+              emissive: mat.emissive.clone(),
+            });
+            return mat;
+          });
+          const old = Array.isArray(object.material)
+            ? object.material
+            : [object.material];
+          // Dispose the shared originals once after every mesh has cloned them.
+          for (const mat of old) loadedMaterials.add(mat);
+          object.material = Array.isArray(object.material)
+            ? materials
+            : materials[0];
+        });
+        for (const mat of loadedMaterials) mat.dispose();
+        root.add(rig);
+        resize = new ResizeObserver(() => {
+          width = element.clientWidth;
+          height = element.clientHeight;
+          if (!width || !height || !renderer) return;
+          const nextMobile = window.matchMedia("(max-width: 760px)").matches,
+            first = renderer.domElement.width <= 1;
+          const changed = nextMobile !== mobile;
+          mobile = nextMobile;
+          const viewHeight = mobile ? 9.5 : 8.8,
+            aspect = width / height;
+          camera.left = (-viewHeight * aspect) / 2;
+          camera.right = (viewHeight * aspect) / 2;
+          camera.top = viewHeight / 2;
+          camera.bottom = -viewHeight / 2;
+          camera.updateProjectionMatrix();
+          renderer.setSize(width, height);
+          if (changed || first) focus(latest.current.selected);
+          else draw();
+        });
+        resize.observe(element);
+        controller.current = {
+          highlight,
+          focus,
+          view: (action) => {
+            if (action === "reset") reset();
+            else {
+              camera.zoom = THREE.MathUtils.clamp(
+                camera.zoom * (action === "in" ? 1.5 : 1 / 1.5),
+                0.8,
+                12,
+              );
+              camera.updateProjectionMatrix();
+              draw();
+            }
+          },
+          theme: (dark) => {
+            hemi.intensity = dark ? 2.7 : 2;
+            key.intensity = dark ? 4 : 3.2;
+            draw();
+          },
+        };
+        reset();
+        focus(latest.current.selected);
+        highlight(latest.current.active);
+        controller.current.theme(
+          document.documentElement.dataset.theme === "dark",
+        );
+        setStatus("");
+      } catch {
+        if (!disposed) setStatus("3D 預覽暫時無法顯示，仍可編輯配件。");
+      }
+    })();
+    function releaseRig() {
+      rig?.traverse((object) => {
+        if (object instanceof THREE.Mesh) {
+          object.geometry.dispose();
+          for (const mat of Array.isArray(object.material)
+            ? object.material
+            : [object.material])
+            mat.dispose();
+        }
+      });
+    }
+    return () => {
+      disposed = true;
+      controller.current = null;
+      resize?.disconnect();
+      controls?.dispose();
+      releaseRig();
+      environment?.dispose();
+      if (renderer) {
+        renderer.domElement.removeEventListener("pointerdown", down);
+        renderer.domElement.removeEventListener("pointerup", up);
+        renderer.domElement.removeEventListener(
+          "webglcontextlost",
+          contextLost,
+        );
+        renderer.domElement.removeEventListener(
+          "webglcontextrestored",
+          contextRestored,
+        );
+        renderer.dispose();
+        renderer.domElement.remove();
+      }
+    };
+  }, []);
+  useEffect(() => controller.current?.highlight(active), [active]);
+  useEffect(() => controller.current?.focus(selected), [selected]);
+  useEffect(
+    () => controller.current?.theme(resolvedTheme === "dark"),
+    [resolvedTheme],
+  );
+  return (
+    <>
+      <div className="fl-rig-canvas" ref={host} />
+      <svg
+        ref={overlay}
+        className="fl-rig-3d-leads"
+        viewBox="0 0 1000 1000"
+        preserveAspectRatio="none"
+        aria-hidden="true"
       >
-        <circle cy="-2" r="3" fill="none" stroke="#9ab2c3" />
-        <path
-          d="M0 1c-14 11-14 36-7 52l7 9 7-9C14 37 14 12 0 1Z"
-          fill={fill("lure")}
-          stroke="#7698b0"
-          strokeWidth=".8"
-        />
-        <path
-          d="M0 12c-5 13-6 27-3 36"
-          fill="none"
-          stroke="#fff"
-          strokeOpacity=".6"
-        />
-        <circle cx="3" cy="10" r="2" fill="#1b344b" />
-        <path
-          d="M0 62v7l-7 8m7-8 7 8M-7 77v7c0 6 7 7 7 0m7-7v7c0 6-7 7-7 0"
-          fill="none"
-          stroke="#8da5b6"
-          strokeWidth="1.8"
-        />
-      </g>
-      <g
-        className="fl-rig-anchor"
-        fill="var(--fl-surface)"
-        stroke="var(--fl-blue)"
-        strokeWidth="1.5"
-      >
-        {Object.entries(
-          mobile
-            ? {
-                rod: [88, 410],
-                reel: [113, 618],
-                mainLine: [126, 233],
-                leaderLine: [160, 384],
-                lure: [165, 516],
-              }
-            : {
-                rod: [458, 287],
-                reel: [370, 400],
-                mainLine: [644, 153],
-                leaderLine: [775, 352],
-                lure: [783, 462],
-              },
-        ).map(([slot, [x, y]]) => (
-          <g
-            key={slot}
-            className={`fl-rig-target${active === slot ? " is-active" : ""}`}
-          >
-            <circle cx={x} cy={y} r="4" />
-            <circle
-              className="fl-rig-target-ring"
-              cx={x}
-              cy={y}
-              r="11"
-              fill="none"
-            />
+        {slots.map((slot) => (
+          <g key={slot} className={active === slot ? "is-active" : ""}>
+            <path data-lead={slot} />
+            <circle data-anchor={slot} r="4" />
           </g>
         ))}
-      </g>
-    </svg>
+      </svg>
+      {status && (
+        <div className="fl-rig-status" role="status">
+          <span className="fl-rig-loading-dot" />
+          {status}
+        </div>
+      )}
+      <div className="fl-rig-view-controls" role="group" aria-label="3D 視角">
+        <button
+          type="button"
+          onClick={() => controller.current?.view("in")}
+          aria-label="放大釣組"
+        >
+          <ZoomIn size={17} />
+        </button>
+        <button
+          type="button"
+          onClick={() => controller.current?.view("out")}
+          aria-label="縮小釣組"
+        >
+          <ZoomOut size={17} />
+        </button>
+        <button
+          type="button"
+          onClick={() => controller.current?.view("reset")}
+          aria-label="重設釣組視角"
+        >
+          <RotateCcw size={17} />
+        </button>
+      </div>
+    </>
   );
 }

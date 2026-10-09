@@ -2,11 +2,12 @@
 import { useRef, useState } from "react";
 import { useFishLog } from "./provider";
 import { gearSlots, validateGear, gearChanged } from "@/lib/gear";
-import LoadoutRig from "./loadout-rig";
+import dynamic from "next/dynamic";
 import { Check, LoaderCircle, Save } from "lucide-react";
 import type { GearProfile } from "@/data/types";
 type Slot = Exclude<keyof GearProfile, "name">;
 const emptyLoadout: GearProfile = { name: "我的岸釣裝備" };
+const LoadoutRig = dynamic(() => import("./loadout-rig"), { ssr: false });
 export default function Gear({ embedded = false }: { embedded?: boolean }) {
   const { data, loading, demo, saveDemo, refresh, user } = useFishLog();
   const [edited, setEdited] = useState<GearProfile | null>(null);
@@ -91,8 +92,11 @@ export default function Gear({ embedded = false }: { embedded?: boolean }) {
         </header>
         <div className="fl-rig-stage" aria-label="釣竿及配件配置">
           <span className="fl-rig-stage-label">紡車式釣組</span>
-          <LoadoutRig active={hovered ?? active} />
-          <LoadoutRig mobile active={hovered ?? active} />
+          <LoadoutRig
+            active={hovered ?? active}
+            selected={active}
+            onSelect={setActive}
+          />
           {gearSlots.map(({ key, label, name }) => (
             <div
               key={key}
@@ -141,7 +145,7 @@ export default function Gear({ embedded = false }: { embedded?: boolean }) {
               )}
             </div>
           ))}
-          <span className="fl-rig-stage-note">點擊配件編輯</span>
+          <span className="fl-rig-stage-note">拖動旋轉 · 雙指縮放</span>
         </div>
         <div className="fl-loadout-feedback" role="status">
           {saved && (

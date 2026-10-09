@@ -5,6 +5,10 @@ export type SwimProfile = {
   driftPhase: number;
   amplitude: number;
 };
+/** PixelFish normalizes every image to face left before swimming transforms. */
+export function swimFacing(velocity: number, previous = 1): number {
+  return Math.abs(velocity) < 0.0001 ? previous : velocity > 0 ? -1 : 1;
+}
 const positions: Record<string, [number, number]> = {
   "black-seabream": [0.17, 0.27],
   "yellowfin-seabream": [0.48, 0.4],

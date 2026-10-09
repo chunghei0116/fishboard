@@ -152,14 +152,7 @@ export function CatchDetail({ id }: { id: string }) {
           </div>
           <figure className="fl-original">
             {record.photo ? (
-              <a
-                href={record.photo}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="查看完整原相"
-              >
-                <img src={record.photo} alt={`${speciesName(fish)}原始魚相`} />
-              </a>
+              <img src={record.photo} alt={`${speciesName(fish)}原始魚相`} />
             ) : (
               <div>未提供原始魚相</div>
             )}

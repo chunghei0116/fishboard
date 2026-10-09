@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { motion, useAnimationFrame, useMotionValue } from "framer-motion";
 import type { SpeciesSummary } from "@/data/types";
-import { swimPosition, swimProfile } from "@/lib/fish-swimming";
+import { swimPosition, swimProfile, swimFacing } from "@/lib/fish-swimming";
 import { speciesName } from "@/lib/fish-log";
 import PixelFish from "./pixel-fish";
 export default function SwimmingFish({
@@ -29,6 +29,7 @@ export default function SwimmingFish({
   const profile = useMemo(() => swimProfile(fish.id, index), [fish.id, index]);
   const x = useMotionValue(0),
     y = useMotionValue(0);
+  const facing = useMotionValue(1);
   useEffect(() => {
     const node = host.current,
       tank = node?.parentElement;
@@ -51,13 +52,14 @@ export default function SwimmingFish({
         );
       x.set(position.x);
       y.set(position.y);
+      facing.set(swimFacing(position.velocity, facing.get()));
     };
     const observer = new ResizeObserver(measure);
     observer.observe(tank);
     observer.observe(node);
     measure();
     return () => observer.disconnect();
-  }, [profile, x, y]);
+  }, [profile, x, y, facing]);
   useAnimationFrame((_, delta) => {
     if (stopped || !bounds.current.width) return;
     clock.current += Math.min(delta, 64) / 1000;
@@ -72,6 +74,7 @@ export default function SwimmingFish({
       );
     x.set(position.x);
     y.set(position.y);
+    facing.set(swimFacing(position.velocity, facing.get()));
   });
   return (
     <motion.div ref={host} className="fl-swimmer" style={{ x, y }}>
@@ -83,9 +86,9 @@ export default function SwimmingFish({
         aria-describedby={selected ? `fish-tooltip-${fish.id}` : undefined}
         onClick={onSelect}
       >
-        <span className="fl-swimmer-image">
+        <motion.span className="fl-swimmer-image" style={{ scaleX: facing }}>
           <PixelFish species={fish} />
-        </span>
+        </motion.span>
         <span
           className="fl-fish-tooltip"
           id={`fish-tooltip-${fish.id}`}

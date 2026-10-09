@@ -3024,3 +3024,127 @@ path.fl-rig-piece.is-active {
     padding: 12px 14px;
   }
 }
+
+/* Actual GLB meshes replace the former flat illustration. */
+.fl-rig-canvas {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+.fl-rig-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+.fl-rig-canvas canvas:active {
+  cursor: grabbing;
+}
+.fl-rig-3d-leads {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+.fl-rig-3d-leads path {
+  fill: none;
+  stroke: var(--fl-muted);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.45;
+}
+.fl-rig-3d-leads circle {
+  fill: var(--fl-surface);
+  stroke: var(--fl-muted);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.fl-rig-3d-leads .is-active path,
+.fl-rig-3d-leads .is-active circle {
+  stroke: var(--fl-blue);
+  opacity: 1;
+}
+.fl-rig-slot,
+.fl-rig-stage-label,
+.fl-rig-stage-note {
+  z-index: 2;
+}
+.fl-rig-stage-label,
+.fl-rig-stage-note {
+  pointer-events: none;
+}
+.fl-rig-view-controls {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  z-index: 3;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--fl-border);
+  border-radius: 24px;
+  background: var(--fl-glass);
+  backdrop-filter: blur(12px);
+}
+.fl-rig-view-controls button {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--fl-muted);
+  cursor: pointer;
+}
+.fl-rig-view-controls button:hover {
+  color: var(--fl-blue);
+  background: var(--fl-glass-active);
+}
+.fl-rig-view-controls button:focus-visible {
+  outline: 2px solid var(--fl-blue);
+}
+.fl-rig-status {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 25px;
+  color: var(--fl-muted);
+  pointer-events: none;
+  font-size: 12px;
+}
+.fl-rig-loading-dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--fl-blue);
+  animation: fl-rig-loading 1s ease-in-out infinite alternate;
+}
+@keyframes fl-rig-loading {
+  to {
+    transform: translateY(-6px);
+    opacity: 0.4;
+  }
+}
+@media (max-width: 760px) {
+  .fl-rig-view-controls {
+    bottom: 9px;
+    right: 9px;
+  }
+  .fl-rig-view-controls button {
+    width: 36px;
+    height: 36px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fl-rig-loading-dot {
+    animation: none;
+  }
+}
