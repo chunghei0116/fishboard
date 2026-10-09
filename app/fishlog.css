@@ -3329,3 +3329,23 @@ path.fl-rig-piece.is-active {
     bottom: 18px;
   }
 }
+
+.fl-location-field { display: grid; gap: 9px; min-width: 0; }
+.fl-location-control { position: relative; }
+.fl-location-control > svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--fl-muted); pointer-events: none; }
+.fl-location-control input { padding-inline: 38px !important; }
+.fl-location-control > .fl-location-check { left: auto; right: 12px; color: var(--fl-blue, #278de5); }
+.fl-place-panel { border: 1px solid var(--fl-border); background: var(--fl-surface); border-radius: 12px; overflow: hidden; min-width: 0; }
+.fl-place-panel ul { list-style: none; margin: 0; padding: 4px; max-height: 240px; overflow-y: auto; overscroll-behavior: contain; }
+.fl-place-panel li { margin: 0; }
+.fl-place-panel button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; border: 0; border-radius: 8px; background: transparent; color: var(--fl-text); text-align: left; padding: 10px; cursor: pointer; }
+.fl-place-panel button:hover, .fl-place-panel button[aria-selected="true"], .fl-place-panel button:focus-visible { background: color-mix(in srgb, #278de5 9%, var(--fl-surface)); outline: 1px solid #278de5; outline-offset: -1px; }
+.fl-place-panel button > svg { flex: 0 0 auto; color: var(--fl-muted); }
+.fl-place-panel button span { display: grid; gap: 4px; min-width: 0; overflow-wrap: anywhere; }
+.fl-place-panel button b { font-size: 13px; font-weight: 500; }
+.fl-place-panel button small { color: var(--fl-muted); font-size: 11px; line-height: 1.5; }
+.fl-place-status { display: flex; align-items: center; gap: 6px; padding: 10px 12px 4px; color: var(--fl-muted); font-size: 11px; }
+.fl-place-source { display: block; padding: 4px 12px 10px; font-size: 10px; line-height: 1.5; color: var(--fl-muted); overflow-wrap: anywhere; }
+.fl-place-spinner { animation: fl-place-spin 1s linear infinite; }
+@keyframes fl-place-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .fl-place-spinner { animation: none; } }

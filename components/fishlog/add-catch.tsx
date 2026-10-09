@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, Camera, Sun, Moon } from "lucide-react";
 import { useFishLog } from "./provider";
+import { LocationInput } from "./location-input";
 import {
   validateCatch,
   validateSpeciesNames,
@@ -327,15 +328,7 @@ export default function AddCatch({ onClose }: { onClose?: () => void }) {
                     ))}
                   </div>
                 </fieldset>
-                <label className="fl-wide">
-                  地點
-                  <input
-                    name="location"
-                    required
-                    maxLength={160}
-                    placeholder="例如 長沙灣"
-                  />
-                </label>
+                <LocationInput />
               </div>
             </section>
             <label className="fl-photo-picker">
