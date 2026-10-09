@@ -17,9 +17,31 @@ export function LocationInput() {
   const [composing, setComposing] = useState(false);
   const [active, setActive] = useState(-1);
   const input = useRef<HTMLInputElement>(null);
+  const field = useRef<HTMLDivElement>(null);
   const q = value.trim().replace(/\s+/g, " ");
   const places = result?.query === q ? result.places : [];
   const open = focused && !selected && !composing && q.length >= 2;
+
+  useEffect(() => {
+    // Safari touch taps can blur the input with a null relatedTarget before
+    // delivering click. Close only on a real interaction outside this field.
+    function outside(event: Event) {
+      if (
+        event.target instanceof Node &&
+        !field.current?.contains(event.target)
+      ) {
+        setFocused(false);
+        setLoading(false);
+        setActive(-1);
+      }
+    }
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("focusin", outside);
+    return () => {
+      document.removeEventListener("pointerdown", outside);
+      document.removeEventListener("focusin", outside);
+    };
+  }, []);
 
   useEffect(() => {
     if (selected || composing || !focused || q.length < 2) return;
@@ -69,16 +91,7 @@ export function LocationInput() {
     input.current?.focus();
   }
   return (
-    <div
-      className="fl-wide fl-location-field"
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) {
-          setFocused(false);
-          setLoading(false);
-          setActive(-1);
-        }
-      }}
-    >
+    <div ref={field} className="fl-wide fl-location-field">
       <label htmlFor={id}>地點</label>
       <div className="fl-location-control">
         <MapPin size={16} aria-hidden="true" />
